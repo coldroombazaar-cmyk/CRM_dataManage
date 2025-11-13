@@ -1,0 +1,259 @@
+/* =============================
+   GLOBAL THEME VARIABLES
+============================= */
+:root {
+  --bg: #f5f5f7;
+  --card: #ffffff;
+  --text: #222;
+  --muted: #666;
+  --border: #dcdcdc;
+  --primary: #2a7cff;
+  --radius: 10px;
+  --shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+/* Dark Mode */
+.dark {
+  --bg: #121212;
+  --card: #1e1e1e;
+  --text: #eeeeee;
+  --muted: #aaaaaa;
+  --border: #333;
+  --primary: #4aa3ff;
+  --shadow: 0 4px 18px rgba(255,255,255,0.05);
+}
+
+/* =============================
+   BASE
+============================= */
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", system-ui, sans-serif;
+  padding: 20px;
+}
+
+/* Container */
+.container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* =============================
+   HERO SECTION
+============================= */
+.hero {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px 10px;
+}
+.hero h1 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.hero p {
+  font-size: 16px;
+  color: var(--muted);
+}
+
+/* =============================
+   CARDS
+============================= */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 25px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  margin-bottom: 35px;
+}
+
+.card h2 {
+  margin-bottom: 18px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* =============================
+   GRID LAYOUT
+============================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.col-12 {
+  grid-column: 1 / -1;
+}
+
+/* =============================
+   FORM ELEMENTS
+============================= */
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+input, select, textarea {
+  width: 90%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--text);
+  transition: 0.2s;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(42,124,255,0.2);
+}
+
+/* Textarea */
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* =============================
+   BUTTONS
+============================= */
+button {
+  padding: 10px 20px;
+  font-size: 15px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+.primary {
+  background: var(--primary);
+  color: #fff;
+}
+.primary:hover {
+  opacity: 0.9;
+}
+
+.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.ghost:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+/* Controls row */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* =============================
+   IMAGE PREVIEW
+============================= */
+#preview img {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+
+/* =============================
+   SEARCH SECTION
+============================= */
+.search-row {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.search-row input {
+  flex-grow: 1;
+}
+
+/* =============================
+   LIVE SUGGEST BOX
+============================= */
+.suggest-box {
+  position: absolute;
+  left: 0;
+  top: 44px;
+  width: calc(100% - 140px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  z-index: 2000;
+  display: none;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.suggest-item {
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.suggest-item:hover {
+  background: rgba(0,0,0,0.08);
+}
+
+/* =============================
+   RESULT CARDS
+============================= */
+.results {
+  margin-top: 18px;
+}
+
+.result-card {
+  background: var(--card);
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+
+.result-card .meta {
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.badge-premium {
+  background: gold;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+/* =============================
+   DARK MODE TOGGLE
+============================= */
+.theme-toggle {
+  position: fixed;
+  right: 20px;
+  top: 20px;
+}
+
+.theme-toggle button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: #fff;
+}

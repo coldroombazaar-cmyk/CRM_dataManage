@@ -1,0 +1,231 @@
+/* RESET */
+* {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
+}
+
+/* COLORS */
+:root {
+  --bg: #f0f2f5;
+  --card: #fff;
+  --text: #222;
+  --muted: #666;
+  --primary: #0066ff;
+  --border: #ddd;
+  --radius: 8px;
+}
+
+/* LAYOUT */
+body {
+  background: var(--bg);
+  padding: 20px;
+}
+
+.app {
+  max-width: 1400px;
+  margin: auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 28px;
+}
+
+.sub {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.layout {
+  display: flex;
+  gap: 20px;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  padding: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.cat-list .cat {
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+}
+
+.cat:hover {
+  background: #e7f0ff;
+}
+
+.cat.active {
+  background: var(--primary);
+  color: white;
+}
+
+/* IMPORT */
+.import-box {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.import-status {
+  font-size: 13px;
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.import-log {
+  background: #f7f7f7;
+  border: 1px solid var(--border);
+  padding: 10px;
+  border-radius: var(--radius);
+  display: none;
+}
+
+/* BUTTONS */
+.btn {
+  padding: 8px 14px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn.small {
+  padding: 6px 10px;
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.btn.ghost {
+  border: 1px solid var(--border);
+  background: white;
+}
+
+.btn.danger {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn.full {
+  width: 100%;
+  margin-top: 12px;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.search-input, .category-filter {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  flex: 1;
+}
+
+.company-list {
+  margin-top: 10px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: var(--radius);
+  background: white;
+  border: 1px solid var(--border);
+}
+
+.item.premium {
+  border-left: 4px solid gold;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* BADGES */
+.badge-premium {
+  background: gold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* WhatsApp Icon */
+.wp-icon {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+/* MODAL */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-box {
+  background: white;
+  padding: 20px;
+  width: 350px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.modal-box input {
+  margin-bottom: 12px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+}

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Panel — CRM</title>
+
+  <link rel="stylesheet" href="admin-panel.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div>
+      <h1>Admin Panel</h1>
+      <p class="sub">Manage Companies • Categories • Import • Export</p>
+    </div>
+    <div class="login-status" id="info">Not logged in</div>
+  </header>
+
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- CATEGORIES -->
+      <div class="card">
+        <div class="row-between">
+          <strong>Categories</strong>
+          <button id="btnNewCategory" class="btn ghost small">+ New</button>
+        </div>
+        <div id="cats" class="cat-list"></div>
+
+        <hr>
+
+        <!-- Import -->
+        <label class="small">Import Excel (.xlsx/.xls)</label>
+
+        <div class="import-box">
+          <input id="importFile" type="file" accept=".xlsx,.xls" />
+          <button id="btnImport" class="btn small">Import</button>
+        </div>
+
+        <div id="importStatus" class="import-status"></div>
+        <pre id="importLog" class="import-log"></pre>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="card">
+        <strong>Admin</strong>
+
+        <div class="admin-actions">
+          <button id="btnShowLogin" class="btn primary small">Login</button>
+          <button id="btnLogout" class="btn ghost small">Logout</button>
+        </div>
+
+        <button id="btnExport" class="btn primary full">Export XLSX</button>
+      </div>
+
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="main">
+
+      <div class="card">
+
+        <div class="toolbar">
+          <input id="filterText" placeholder="Search business…" class="search-input">
+          <select id="categoryFilter" class="category-filter">
+            <option value="">All categories</option>
+          </select>
+
+          <button id="btnRefresh" class="btn primary">Refresh</button>
+          <button id="btnListAdmins" class="btn ghost">Admins</button>
+        </div>
+
+        <div id="list" class="company-list">
+          <div class="small">Click Refresh</div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- EDIT MODAL -->
+<div class="modal hidden" id="editModal">
+  <div class="modal-box">
+    <h3>Edit Company</h3>
+
+    <label>Business Name</label>
+    <input id="editName">
+
+    <label>Owner</label>
+    <input id="editOwner">
+
+    <div class="modal-actions">
+      <button id="editSave" class="btn primary">Save</button>
+      <button id="editCancel" class="btn ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal hidden" id="deleteModal">
+  <div class="modal-box">
+    <h3>Delete Company?</h3>
+    <p>This action cannot be undone.</p>
+
+    <div class="modal-actions">
+      <button id="deleteConfirm" class="btn danger">Delete</button>
+      <button id="deleteCancel" class="btn ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin-panel.js"></script>
+
+</body>
+</html>

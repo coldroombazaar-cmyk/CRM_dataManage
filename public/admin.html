@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin — Login</title>
+  <style>
+    :root{--bg:#fbfdff;--card:#fff;--accent:#2563eb;--muted:#6b7280;--radius:10px}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:var(--bg);color:#0f172a}
+    .wrap{max-width:560px;margin:60px auto;padding:18px}
+    .card{background:var(--card);padding:18px;border-radius:var(--radius);box-shadow:0 6px 20px rgba(12,16,24,0.04)}
+    input{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ef;margin:8px 0;font-size:15px}
+    button{background:var(--accent);color:#fff;border:0;padding:10px 14px;border-radius:8px;cursor:pointer}
+    .ghost{background:transparent;border:1px solid #e6e9ef;color:var(--muted);padding:10px 12px;border-radius:8px}
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    pre{background:#f4f6fb;padding:10px;border-radius:8px;margin-top:12px;white-space:pre-wrap}
+    .small{font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h2 style="margin:0 0 8px">Admin — Login</h2>
+      <form id="login" autocomplete="off">
+        <input id="user" placeholder="username" value="admin" />
+        <input id="pass" type="password" placeholder="password" value="change_me_123" />
+        <div class="row" style="margin-top:8px">
+          <button type="submit">Login & Open Panel</button>
+          <button id="btnShowToken" type="button" class="ghost">Show Token</button>
+          <button id="btnLogout" type="button" class="ghost">Logout</button>
+          <button id="btnListAdmins" type="button" class="ghost">List Admins</button>
+        </div>
+      </form>
+
+      <pre id="out">No response yet</pre>
+      <div class="small" style="margin-top:8px">After successful login you'll be redirected to the admin panel.</div>
+    </div>
+  </div>
+
+<script>
+  // token helpers
+  function getToken(){ return localStorage.getItem('admin_token') || ''; }
+  function setToken(t){ if(t) localStorage.setItem('admin_token', t); else localStorage.removeItem('admin_token'); }
+
+  async function fetchJson(path, opts = {}) {
+    opts.headers = opts.headers || {};
+    const token = getToken();
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    if (opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(opts.body);
+    }
+    const res = await fetch(path, opts);
+    const text = await res.text().catch(()=>null);
+    let json = null;
+    try { json = text ? JSON.parse(text) : null; } catch(e) { json = text; }
+    return { ok: res.ok, status: res.status, body: json };
+  }
+
+  const loginForm = document.getElementById('login');
+  const out = document.getElementById('out');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    out.textContent = 'Logging in…';
+    const username = document.getElementById('user').value.trim();
+    const password = document.getElementById('pass').value;
+    if (!username || !password) { out.textContent = 'Enter username & password'; return; }
+    try {
+      const r = await fetch('/admin/login', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ username, password })
+      });
+      const data = await r.json();
+      out.textContent = JSON.stringify(data, null, 2);
+      if (r.ok && data.token) {
+        setToken(data.token);
+        // redirect to admin panel
+        out.textContent = '✅ Logged in — Redirecting to Admin Panel…';
+        setTimeout(()=> window.location.href = '/admin-panel.html', 300);
+      } else {
+        out.textContent = 'Login failed: ' + (data.error || JSON.stringify(data));
+      }
+    } catch (err) {
+      out.textContent = 'Network error: ' + err.message;
+      console.error(err);
+    }
+  });
+
+  document.getElementById('btnShowToken').addEventListener('click', () => {
+    const t = getToken();
+    out.textContent = t ? t : 'No token stored';
+  });
+
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    setToken(null);
+    out.textContent = 'Logged out';
+  });
+
+  document.getElementById('btnListAdmins').addEventListener('click', async () => {
+    try {
+      const r = await fetchJson('/admin/list-admins');
+      if (!r.ok) return alert('Failed: ' + JSON.stringify(r.body));
+      const list = r.body;
+      if (!Array.isArray(list) || list.length === 0) return alert('No admins found');
+      const table = list.map(a=>`${a.id}. ${a.username} (${a.created_at||'—'})`).join('\n');
+      const id = prompt('Admins:\n\n' + table + '\n\nEnter ID to delete or Cancel:');
+      if (!id) return;
+      if (!confirm('Delete admin #' + id + '?')) return;
+      const del = await fetchJson('/admin/delete-admin/' + encodeURIComponent(id), { method: 'DELETE' });
+      if (!del.ok) alert('Delete failed: ' + JSON.stringify(del.body));
+      else alert(del.body.message || 'Deleted');
+    } catch (err) { alert('Error: ' + err.message); }
+  });
+
+  // show token status on load
+  window.addEventListener('load', ()=> {
+    if (getToken()) out.textContent = 'Token present — login OK';
+  });
+</script>
+</body>
+</html>

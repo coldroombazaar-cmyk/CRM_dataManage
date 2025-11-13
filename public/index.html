@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRM — Add & Search</title>
+
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<!-- DARK MODE BUTTON -->
+<div class="theme-toggle">
+  <button id="toggleTheme">🌙 Dark</button>
+</div>
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <h1>CRM Manager</h1>
+  <p>Manage your business contacts with speed & simplicity.</p>
+</section>
+
+<div class="container">
+
+  <!-- ADD FORM -->
+  <section class="card">
+    <h2>Add Business</h2>
+
+    <form id="addForm" class="grid" enctype="multipart/form-data">
+      <div class="col-6">
+        <label>Business Name *</label>
+        <input id="businessName" name="businessName" required>
+      </div>
+
+      <div class="col-6">
+        <label>Owner Name</label>
+        <input id="ownerName" name="ownerName">
+      </div>
+
+      <div class="col-6">
+        <label>Category</label>
+        <select id="categorySelect" name="categoryId">
+          <option value="">— No category — (Unknown)</option>
+        </select>
+      </div>
+
+      <div class="col-6">
+        <label>State *</label>
+        <input id="state" name="state" required>
+      </div>
+
+      <div class="col-6">
+        <label>Phone</label>
+        <input id="contactNumber" name="contactNumber">
+      </div>
+
+      <div class="col-6">
+        <label>WhatsApp</label>
+        <input id="whatsappNumber" name="whatsappNumber">
+      </div>
+
+      <div class="col-6">
+        <label>Email</label>
+        <input id="email" type="email" name="email">
+      </div>
+
+      <div class="col-6">
+        <label>Website</label>
+        <input id="website" name="website">
+      </div>
+
+      <div class="col-6">
+        <label>GST No</label>
+        <input id="gstNo" name="gstNo">
+      </div>
+
+      <div class="col-6">
+        <label>Capacity</label>
+        <input id="capacity" name="capacity">
+      </div>
+
+      <div class="col-12">
+        <label>Description</label>
+        <textarea id="description" name="description"></textarea>
+      </div>
+
+      <div class="col-12">
+        <label>Images</label>
+        <input id="images" name="images" type="file" multiple>
+        <div id="preview"></div>
+      </div>
+
+      <div class="col-12 controls">
+        <button class="primary" type="submit">Add</button>
+        <button class="ghost" type="button" id="clear">Clear</button>
+        <span id="msg"></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- SEARCH -->
+  <section class="card">
+    <h2>Search</h2>
+
+    <div class="search-row">
+      <input id="searchBox" placeholder="Search businesses...">
+      <select id="searchCategory">
+        <option value="">All</option>
+      </select>
+      <button id="searchBtn" class="primary">Search</button>
+
+      <!-- LIVE SUGGEST -->
+      <div id="suggestBox" class="suggest-box"></div>
+    </div>
+
+    <div id="results" class="results">Start searching…</div>
+  </section>
+
+</div>
+
+<script src="index.js"></script>
+</body>
+</html>
