@@ -21,93 +21,114 @@
       <h1>Admin Panel</h1>
       <p class="sub">Manage Companies • Categories • Import • Export</p>
     </div>
-    <div class="login-status" id="info">Not logged in</div>
+    <div id="info">Logged out</div>
   </header>
 
+  <!-- LAYOUT -->
   <div class="layout">
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
 
-      <!-- CATEGORIES -->
-      <div class="card glass">
+      <div class="card">
         <div class="row-between">
           <strong>Categories</strong>
           <button id="btnNewCategory" class="btn ghost small">+ New</button>
         </div>
-        <div id="cats" class="cat-list"></div>
+
+        <div id="cats"></div>
 
         <hr>
 
-        <!-- Import -->
-        <label class="small">Import Excel (.xlsx/.xls)</label>
-
+        <label>Import Excel (.xlsx/.xls)</label>
         <div class="import-box">
-          <input id="importFile" type="file" accept=".xlsx,.xls" />
+          <input id="importFile" type="file" accept=".xlsx,.xls">
           <button id="btnImport" class="btn small">Import</button>
         </div>
 
-        <div id="importStatus" class="import-status"></div>
-        <pre id="importLog" class="import-log"></pre>
+        <div id="importStatus"></div>
+        <pre id="importLog"></pre>
       </div>
 
-      <!-- ADMIN -->
-      <div class="card glass">
+      <!-- ADMIN CARD -->
+      <div class="card">
         <strong>Admin</strong>
-
-        <div class="admin-actions">
-          <button id="btnShowLogin" class="btn primary small">Login</button>
-          <button id="btnLogout" class="btn ghost small">Logout</button>
-        </div>
-
+        <button id="btnShowLogin" class="btn primary small">Login</button>
+        <button id="btnLogout" class="btn ghost small">Logout</button>
         <button id="btnExport" class="btn primary full">Export XLSX</button>
       </div>
 
     </aside>
 
-    <!-- MAIN AREA -->
+    <!-- MAIN -->
     <main class="main">
-      <div class="card glass">
+      <div class="card">
 
         <div class="toolbar">
           <input id="filterText" placeholder="Search business…" class="search-input">
+
           <select id="categoryFilter" class="category-filter">
             <option value="">All categories</option>
           </select>
 
           <button id="btnRefresh" class="btn primary">Refresh</button>
           <button id="btnListAdmins" class="btn ghost">Admins</button>
+          <button id="btnDeleteSelected" class="btn danger">Delete Selected</button>
         </div>
 
-        <div id="list" class="company-list">
-          <div class="small">Click Refresh</div>
-        </div>
+        <div id="list" class="company-list"></div>
+
       </div>
     </main>
+
   </div>
 </div>
 
-<!-- EDIT MODAL -->
+
+<!-- ===================== EDIT MODAL (TWO COLUMN) ===================== -->
 <div class="modal hidden" id="editModal">
-  <div class="modal-box glass">
+  <div class="modal-box">
+
     <h3>Edit Company</h3>
 
-    <label>Business Name</label>
-    <input id="editName">
+    <div class="form-grid">
 
-    <label>Owner</label>
-    <input id="editOwner">
+      <div><label>Business Name</label><input id="editName"></div>
+      <div><label>Owner</label><input id="editOwner"></div>
+
+      <div><label>State</label><input id="editState"></div>
+      <div><label>Phone</label><input id="editPhone"></div>
+
+      <div><label>WhatsApp</label><input id="editWhatsapp"></div>
+      <div><label>Email</label><input id="editEmail"></div>
+
+      <div><label>Website</label><input id="editWebsite"></div>
+      <div><label>GST No</label><input id="editGst"></div>
+
+      <div>
+        <label>Category</label>
+        <select id="editCategory"></select>
+      </div>
+
+      <div class="full">
+        <label>Description</label>
+        <textarea id="editDescription"></textarea>
+      </div>
+
+    </div>
 
     <div class="modal-actions">
       <button id="editSave" class="btn primary">Save</button>
       <button id="editCancel" class="btn ghost">Cancel</button>
     </div>
+
   </div>
 </div>
 
+
 <!-- DELETE MODAL -->
 <div class="modal hidden" id="deleteModal">
-  <div class="modal-box glass">
+  <div class="modal-box">
     <h3>Delete Company?</h3>
     <p>This action cannot be undone.</p>
 
@@ -118,12 +139,29 @@
   </div>
 </div>
 
+
+<!-- PREMIUM MODAL -->
+<div class="modal hidden" id="premiumModal">
+  <div class="modal-box">
+    <h3>Set Premium Period</h3>
+
+    <div class="form-grid">
+      <div><label>Start Date</label><input type="date" id="premiumStart"></div>
+      <div><label>End Date</label><input type="date" id="premiumEnd"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="premiumSave" class="btn primary">Save</button>
+      <button id="premiumCancel" class="btn ghost">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="admin-panel.js"></script>
 
 <script>
 const btn = document.getElementById("themeToggle");
 
-// Load saved theme
 if (localStorage.getItem("theme") === "light") {
   document.body.classList.add("light");
   btn.textContent = "🌙";
@@ -133,12 +171,11 @@ if (localStorage.getItem("theme") === "light") {
 
 btn.onclick = () => {
   document.body.classList.toggle("light");
-  const isLight = document.body.classList.contains("light");
-  localStorage.setItem("theme", isLight ? "light" : "dark");
-  btn.textContent = isLight ? "🌙" : "☀️";
+  const mode = document.body.classList.contains("light") ? "light" : "dark";
+  localStorage.setItem("theme", mode);
+  btn.textContent = mode === "light" ? "🌙" : "☀️";
 };
 </script>
-
 
 </body>
 </html>

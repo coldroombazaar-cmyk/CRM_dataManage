@@ -7,15 +7,14 @@ const wpIcon = `
   </svg>
 `;
 
-/* ============================
-   SHORTCUT
-============================ */
+/* SHORTCUT */
 const $ = id => document.getElementById(id);
 
 /* TOKEN HELPERS */
 const tokenKey = "admin_token";
 const getToken = () => localStorage.getItem(tokenKey) || "";
-const setToken = v => v ? localStorage.setItem(tokenKey, v) : localStorage.removeItem(tokenKey);
+const setToken = v =>
+  v ? localStorage.setItem(tokenKey, v) : localStorage.removeItem(tokenKey);
 
 /* BASIC API */
 async function api(path, opts = {}) {
@@ -29,10 +28,17 @@ async function api(path, opts = {}) {
   }
 
   const res = await fetch(path, opts);
-  if (res.status === 401) { setToken(null); throw new Error("401 Unauthorized"); }
+  if (res.status === 401) {
+    setToken(null);
+    throw new Error("401 Unauthorized");
+  }
 
-  const txt = await res.text().catch(()=>null);
-  try { return txt ? JSON.parse(txt) : null; } catch { return txt; }
+  const txt = await res.text().catch(() => null);
+  try {
+    return txt ? JSON.parse(txt) : null;
+  } catch {
+    return txt;
+  }
 }
 
 /* DOM */
@@ -47,29 +53,49 @@ const btnLogout = $("btnLogout");
 const btnRefresh = $("btnRefresh");
 const btnExport = $("btnExport");
 const btnListAdmins = $("btnListAdmins");
+const btnDeleteSelected = $("btnDeleteSelected");
 
 const importFile = $("importFile");
 const btnImport = $("btnImport");
 const importStatus = $("importStatus");
 const importLog = $("importLog");
 
-const infoEl = $("info"); // small status text
+const infoEl = $("info");
 
-/* Modals */
+/* Edit modal */
 const editModal = $("editModal");
 const editName = $("editName");
 const editOwner = $("editOwner");
+const editState = $("editState");
+const editPhone = $("editPhone");
+const editWhatsapp = $("editWhatsapp");
+const editEmail = $("editEmail");
+const editWebsite = $("editWebsite");
+const editGst = $("editGst");
+const editCategory = $("editCategory");
+const editDescription = $("editDescription");
 const editSave = $("editSave");
 const editCancel = $("editCancel");
 
+/* Delete modal */
 const deleteModal = $("deleteModal");
 const deleteConfirm = $("deleteConfirm");
 const deleteCancel = $("deleteCancel");
+
+/* Premium modal */
+const premiumModal = $("premiumModal");
+const premiumStart = $("premiumStart");
+const premiumEnd = $("premiumEnd");
+const premiumSave = $("premiumSave");
+const premiumCancel = $("premiumCancel");
 
 let categories = [];
 let currentCategory = null;
 let editingId = null;
 let deletingId = null;
+let premiumForId = null;
+let lastRows = [];
+let selectedIds = new Set();
 
 /* ============================
    LOAD CATEGORIES
@@ -78,6 +104,7 @@ async function loadCategories() {
   try {
     const res = await fetch("/categories");
     categories = await res.json();
+    if (!Array.isArray(categories)) categories = [];
   } catch (err) {
     console.error("Failed to load categories", err);
     categories = [];
@@ -85,6 +112,7 @@ async function loadCategories() {
 
   catsDiv.innerHTML = "";
   categoryFilter.innerHTML = `<option value="">— All categories —</option>`;
+  editCategory.innerHTML = `<option value="">— No category —</option>`;
 
   categories.forEach(c => {
     const d = document.createElement("div");
@@ -101,13 +129,18 @@ async function loadCategories() {
     opt.value = c.id;
     opt.textContent = c.name;
     categoryFilter.appendChild(opt);
+
+    const opt2 = document.createElement("option");
+    opt2.value = c.id;
+    opt2.textContent = c.name;
+    editCategory.appendChild(opt2);
   });
 
   renderCats();
 }
 
 function renderCats() {
-  Array.from(catsDiv.children).forEach((n,i) => {
+  Array.from(catsDiv.children).forEach((n, i) => {
     const c = categories[i];
     n.classList.toggle("active", String(c.id) === String(currentCategory));
   });
@@ -130,9 +163,9 @@ btnShowLogin.onclick = async () => {
 
   try {
     const r = await fetch("/admin/login", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({username:u,password:p})
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: u, password: p })
     });
 
     const data = await r.json();
@@ -141,7 +174,7 @@ btnShowLogin.onclick = async () => {
       if (infoEl) infoEl.textContent = "Logged in";
       refresh();
     } else {
-      alert("Login failed");
+      alert(data.error || "Login failed");
     }
   } catch (err) {
     console.error("Login error", err);
@@ -162,10 +195,17 @@ btnRefresh.onclick = refresh;
 
 async function refresh() {
   listEl.innerHTML = "<div class='small'>Loading…</div>";
+  selectedIds.clear();
 
   try {
     const query = currentCategory ? `?categoryId=${currentCategory}` : "";
     const rows = await api("/admin/companies" + query);
+    if (!Array.isArray(rows)) {
+      console.error("Invalid /admin/companies response", rows);
+      listEl.innerHTML = "<div class='small'>Error loading companies.</div>";
+      return;
+    }
+    lastRows = rows;
 
     const text = (filterText.value || "").trim().toLowerCase();
     const filtered = text
@@ -182,9 +222,20 @@ async function refresh() {
     listEl.querySelectorAll(".item").forEach(node => {
       const id = node.dataset.id;
 
-      node.querySelector("[data-act='edit']").onclick = () => openEdit(id);
-      node.querySelector("[data-act='del']").onclick = () => openDelete(id);
-      node.querySelector("[data-act='premium']").onclick = () => setPremium(id);
+      const editBtn = node.querySelector("[data-act='edit']");
+      const delBtn = node.querySelector("[data-act='del']");
+      const premiumBtn = node.querySelector("[data-act='premium']");
+      const check = node.querySelector(".row-check");
+
+      if (editBtn) editBtn.onclick = () => openEdit(id);
+      if (delBtn) delBtn.onclick = () => openDelete(id);
+      if (premiumBtn) premiumBtn.onclick = () => openPremium(id);
+      if (check) {
+        check.onchange = e => {
+          if (e.target.checked) selectedIds.add(id);
+          else selectedIds.delete(id);
+        };
+      }
     });
   } catch (err) {
     console.error("Refresh error", err);
@@ -201,20 +252,25 @@ function renderItem(it) {
   return `
     <div class="item ${it.is_premium ? "premium" : ""}" data-id="${it.id}">
       <div>
-        <div class="title">${escape(it.businessName)}</div>
-        <div class="meta">${escape(it.ownerName || "")} • ${escape(catName)}</div>
-        <div class="meta">${escape(it.description || "")}</div>
+        <div class="title">${escapeHtml(it.businessName)}</div>
+        <div class="meta">${escapeHtml(it.ownerName || "")} • ${escapeHtml(catName)}</div>
+        <div class="meta">${escapeHtml(it.description || "")}</div>
       </div>
 
       <div class="right">
+        <div class="meta">
+          <input type="checkbox" class="row-check">
+        </div>
+
         ${it.is_premium ? `<div class="badge-premium">★ Premium</div>` : ""}
 
         <div class="meta contact">
-          ${escape(it.contactNumber || "")}
-
+          ${escapeHtml(it.contactNumber || "")}
           ${
             it.contactNumber
-              ? `<a href="https://wa.me/${encodeURIComponent(it.contactNumber)}" target="_blank" rel="noopener noreferrer">${wpIcon}</a>`
+              ? `<a href="https://wa.me/${encodeURIComponent(
+                  it.contactNumber
+                )}" target="_blank" rel="noopener noreferrer">${wpIcon}</a>`
               : ""
           }
         </div>
@@ -222,48 +278,69 @@ function renderItem(it) {
         <div class="controls">
           <button class="ghost" data-act="edit">Edit</button>
           <button class="ghost" data-act="del">Delete</button>
-          <button class="ghost" data-act="premium">${it.is_premium ? "Change" : "Set"} Premium</button>
+          <button class="ghost" data-act="premium">${
+            it.is_premium ? "Change Premium" : "Set Premium"
+          }</button>
         </div>
       </div>
     </div>
   `;
 }
 
-function escape(s) {
-  return String(s || "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", "\"":"&quot;", "'":"&#39;"
-  })[c]);
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, c =>
+    ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[c])
+  );
 }
 
 /* ============================
-   EDIT MODAL
+   EDIT MODAL (FULL FIELDS)
 ============================ */
 function openEdit(id) {
   editingId = id;
 
-  // load admin companies (server returns all when called without category)
-  api("/admin/companies")
-    .then(rows => {
-      const item = rows.find(r => String(r.id) === String(id));
-      if (!item) return;
+  const item = lastRows.find(r => String(r.id) === String(id));
+  if (!item) return;
 
-      editName.value = item.businessName;
-      editOwner.value = item.ownerName || "";
+  editName.value = item.businessName || "";
+  editOwner.value = item.ownerName || "";
+  editState.value = item.state || "";
+  editPhone.value = item.contactNumber || "";
+  editWhatsapp.value = item.whatsappNumber || "";
+  editEmail.value = item.email || "";
+  editWebsite.value = item.website || "";
+  editGst.value = item.gstNo || "";
+  editDescription.value = item.description || "";
+  editCategory.value = item.category_id || "";
 
-      editModal.classList.remove("hidden");
-    })
-    .catch(err => console.error("Failed to load company for edit", err));
+  editModal.classList.remove("hidden");
 }
 
 editCancel.onclick = () => editModal.classList.add("hidden");
 
 editSave.onclick = async () => {
+  if (!editingId) return;
+
   try {
     await api("/admin/companies/" + editingId, {
-      method:"PUT",
-      body:{
+      method: "PUT",
+      body: {
         businessName: editName.value,
-        ownerName: editOwner.value
+        ownerName: editOwner.value,
+        state: editState.value,
+        contactNumber: editPhone.value,
+        whatsappNumber: editWhatsapp.value,
+        email: editEmail.value,
+        website: editWebsite.value,
+        gstNo: editGst.value,
+        description: editDescription.value,
+        categoryId: editCategory.value || null
       }
     });
 
@@ -286,41 +363,92 @@ function openDelete(id) {
 deleteCancel.onclick = () => deleteModal.classList.add("hidden");
 
 deleteConfirm.onclick = async () => {
+  if (!deletingId) return;
   try {
-    await api("/admin/companies/" + deletingId, { method:"DELETE" });
+    await api("/admin/companies/" + deletingId, { method: "DELETE" });
     deleteModal.classList.add("hidden");
     refresh();
   } catch (err) {
     console.error("Delete failed", err);
-    alert("Delete failed (see console)");
+    alert("Delete failed (see console).");
   }
 };
 
 /* ============================
-   PREMIUM SET
+   BULK DELETE
 ============================ */
-function setPremium(id) {
-  const start = prompt("Premium start (YYYY-MM-DD)", new Date().toISOString().slice(0,10));
-  if (!start) return;
+btnDeleteSelected.onclick = async () => {
+  if (!selectedIds.size) {
+    alert("No companies selected.");
+    return;
+  }
 
-  const end = prompt("Premium end (YYYY-MM-DD)");
-  if (!end) return;
+  if (!confirm(`Delete ${selectedIds.size} selected companies?`)) return;
 
-  if (new Date(end) <= new Date(start))
-    return alert("Invalid end date");
+  try {
+    const ids = Array.from(selectedIds);
+    await Promise.all(
+      ids.map(id =>
+        api("/admin/companies/" + id, { method: "DELETE" }).catch(err => {
+          console.error("Failed to delete id=", id, err);
+        })
+      )
+    );
+    selectedIds.clear();
+    refresh();
+  } catch (err) {
+    console.error("Bulk delete error", err);
+    alert("Bulk delete failed (see console).");
+  }
+};
 
-  api("/admin/companies/" + id + "/premium", {
-    method:"POST",
-    body:{start,end}
-  }).then(refresh).catch(err => {
-    console.error("Set premium failed", err);
-    alert("Set premium failed (see console)");
-  });
+/* ============================
+   PREMIUM MODAL (DATE PICKER)
+============================ */
+function openPremium(id) {
+  premiumForId = id;
+  premiumStart.value = new Date().toISOString().slice(0, 10);
+  premiumEnd.value = "";
+  premiumModal.classList.remove("hidden");
 }
+
+premiumCancel.onclick = () => {
+  premiumModal.classList.add("hidden");
+  premiumForId = null;
+};
+
+premiumSave.onclick = async () => {
+  if (!premiumForId) return;
+
+  const start = premiumStart.value;
+  const end = premiumEnd.value;
+
+  if (!start || !end) {
+    alert("Please select both start and end date.");
+    return;
+  }
+
+  if (new Date(end) <= new Date(start)) {
+    alert("End date must be after start date.");
+    return;
+  }
+
+  try {
+    await api("/admin/companies/" + premiumForId + "/premium", {
+      method: "POST",
+      body: { start, end }
+    });
+    premiumModal.classList.add("hidden");
+    premiumForId = null;
+    refresh();
+  } catch (err) {
+    console.error("Set premium failed", err);
+    alert("Set premium failed (see console).");
+  }
+};
 
 /* ============================
    IMPORT HANDLER
-   (multipart/form-data with token header)
 ============================ */
 btnImport.onclick = async () => {
   importStatus.textContent = "";
@@ -341,7 +469,7 @@ btnImport.onclick = async () => {
   }
 
   const fd = new FormData();
-  fd.append("file", f); // IMPORTANT: server expects field name "file"
+  fd.append("file", f);
 
   importStatus.textContent = "Uploading...";
 
@@ -355,21 +483,26 @@ btnImport.onclick = async () => {
       body: fd
     });
 
-    const text = await res.text().catch(()=>null);
+    const text = await res.text().catch(() => null);
     let body;
-    try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+    try {
+      body = text ? JSON.parse(text) : null;
+    } catch {
+      body = text;
+    }
 
     if (!res.ok) {
       importStatus.textContent = `Import failed (${res.status})`;
-      importLog.textContent = typeof body === "string" ? body : JSON.stringify(body, null, 2);
+      importLog.textContent =
+        typeof body === "string" ? body : JSON.stringify(body, null, 2);
       console.error("Import failed:", res.status, body);
       return;
     }
 
     importStatus.textContent = "Import succeeded ✅";
-    importLog.textContent = typeof body === "string" ? body : JSON.stringify(body, null, 2);
+    importLog.textContent =
+      typeof body === "string" ? body : JSON.stringify(body, null, 2);
 
-    // Refresh categories & list (import may have added categories)
     await loadCategories();
     refresh();
   } catch (err) {
@@ -380,25 +513,38 @@ btnImport.onclick = async () => {
 };
 
 /* ============================
-   EXPORT BUTTON (download XLSX or CSV)
+   EXPORT BUTTON
 ============================ */
 btnExport.onclick = async () => {
   try {
-    const cat = currentCategory ? `&categoryId=${encodeURIComponent(currentCategory)}` : "";
+    const cat = currentCategory
+      ? `&categoryId=${encodeURIComponent(currentCategory)}`
+      : "";
     const url = `/admin/export?format=xlsx${cat}`;
 
     const token = getToken();
-    if (!token) return alert("Please login as admin to export.");
+    if (!token) {
+      alert("Please login as admin to export.");
+      return;
+    }
 
-    const res = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+    const res = await fetch(url, {
+      headers: { Authorization: "Bearer " + token }
+    });
     if (!res.ok) {
       const txt = await res.text();
       console.error("Export failed", res.status, txt);
-      return alert("Export failed (see console).");
+      alert("Export failed (see console).");
+      return;
     }
 
     const blob = await res.blob();
-    const filename = res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] || `companies_${currentCategory || "all"}.xlsx`;
+    const filename =
+      res.headers
+        .get("content-disposition")
+        ?.match(/filename="(.+)"/)?.[1] ||
+      `companies_${currentCategory || "all"}.xlsx`;
+
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = filename;
@@ -412,23 +558,26 @@ btnExport.onclick = async () => {
 };
 
 /* ============================
-   LIST ADMINS / NOTIFICATIONS (helper)
-   - server has /admin/notifications; we show them here if requested
+   LIST ADMINS / NOTIFICATIONS
 ============================ */
 btnListAdmins.onclick = async () => {
   try {
     const token = getToken();
-    if (!token) return alert("Login required");
+    if (!token) {
+      alert("Login required");
+      return;
+    }
 
-    // example: fetch notifications to show activity (server has /admin/notifications)
     const notes = await api("/admin/notifications");
     if (!notes || !notes.length) {
       alert("No notifications.");
       return;
     }
 
-    const msg = notes.slice(0,20).map(n => `${n.created_at} • ${n.type} • ${n.message}`).join("\n");
-    // show in a large prompt (quick and dirty)
+    const msg = notes
+      .slice(0, 20)
+      .map(n => `${n.created_at} • ${n.type} • ${n.message}`)
+      .join("\n");
     alert(msg);
   } catch (err) {
     console.error("List admins/notifications error", err);

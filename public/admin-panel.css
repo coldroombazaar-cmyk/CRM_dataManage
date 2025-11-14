@@ -6,207 +6,206 @@
   font-family: "Inter", system-ui, sans-serif;
 }
 
-/* ===========================================
-   THEME VARIABLES (DEFAULT = DARK MODE)
-=========================================== */
+/* DARK THEME DEFAULT */
 :root {
   --bg: #0d1117;
-  --card: #161b22;
-  --card-hover: #1d242d;
+  --card: rgba(255,255,255,0.06);
+  --card-hover: rgba(255,255,255,0.12);
   --text: #e6eefc;
-  --text-strong: #ffffff;
   --muted: #9aa4b5;
-  --primary: #00aaff;
-  --border: #2c323a;
-  --input-bg: #0f1318;
-  --input-text: #e6eefc;
-  --radius: 12px;
-  --transition: 0.25s ease;
+  --primary: #009dff;
+  --border: rgba(255,255,255,0.15);
+  --radius: 14px;
+  --modal-bg: rgba(10,10,10,0.85);
 }
 
 /* LIGHT MODE */
 body.light {
-  --bg: #f2f6ff;
-  --card: #ffffff;
-  --card-hover: #f1f1f1;
+  --bg: #eef3ff;
+  --card: rgba(255,255,255,0.9);
+  --card-hover: rgba(240,240,240,1);
   --text: #111;
-  --text-strong: #000;
-  --muted: #555;
+  --muted: #666;
   --primary: #007bff;
-  --border: #d5d9e0;
-  --input-bg: #ffffff;
-  --input-text: #111;
+  --border: #c8c8c8;
+  --modal-bg: rgba(255,255,255,0.9);
 }
 
-/* ===========================================
-   BASE BODY
-=========================================== */
+/* BODY */
 body {
   background: var(--bg);
   color: var(--text);
   padding: 24px;
-  transition: background var(--transition), color var(--transition);
+  transition: 0.3s ease;
 }
 
-/* ===========================================
-   THEME BUTTON
-=========================================== */
+/* THEME BUTTON */
 .theme-btn {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 12px;
+  right: 12px;
   background: var(--card);
   border: 1px solid var(--border);
-  color: var(--text);
-  padding: 10px 16px;
+  padding: 6px 12px;
   border-radius: 50px;
   font-size: 20px;
   cursor: pointer;
-  z-index: 50;
-  transition: var(--transition);
+  backdrop-filter: blur(12px);
+  transition: 0.2s;
+  z-index: 999;
 }
 
-.theme-btn:hover {
-  opacity: 0.8;
+.theme-btn:hover { opacity: 0.85; }
+
+/* LAYOUT */
+.app {
+  max-width: 1400px;
+  margin: auto;
 }
 
-/* ===========================================
-   COMMON ELEMENTS
-=========================================== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.header h1 { font-size: 32px; font-weight: 600; }
+.sub { color: var(--muted); }
+
+/* MAIN LAYOUT */
+.layout {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
 .card {
   padding: 22px;
   border-radius: var(--radius);
   background: var(--card);
   border: 1px solid var(--border);
-  transition: var(--transition);
+  backdrop-filter: blur(14px);
+  transition: 0.25s ease;
 }
 
 .card:hover {
   background: var(--card-hover);
 }
 
-.input,
-.search-input,
-.category-filter {
-  padding: 12px;
-  width: 100%;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--input-text);
-  transition: var(--transition);
-  outline: none;
-}
-
-input:focus,
-.search-input:focus,
-.category-filter:focus {
-  border-color: var(--primary);
-  background: var(--input-bg);
-  color: var(--input-text);
-  box-shadow: 0 0 0 2px var(--primary)40;
-}
-
-/* ===========================================
-   BUTTONS
-=========================================== */
-.btn {
-  padding: 10px 16px;
-  border-radius: var(--radius);
-  border: none;
-  cursor: pointer;
-  background: var(--primary);
-  color: white;
-  transition: var(--transition);
-}
-
-.btn:hover {
-  opacity: 0.85;
-}
-
-.btn.small {
-  padding: 6px 12px;
-}
-
-.btn.ghost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-}
-
-.btn.danger {
-  background: #ff3b30;
-  color: white;
-}
-
-.btn.full {
-  width: 100%;
-}
-
-/* ===========================================
-   SIDEBAR CATEGORY LIST
-=========================================== */
+/* CATEGORY BLOCK */
 .cat {
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.05);
   border-radius: var(--radius);
-  background: var(--card);
-  border: 1px solid var(--border);
+  margin-bottom: 8px;
   cursor: pointer;
-  transition: var(--transition);
+  transition: 0.2s ease;
 }
 
 .cat:hover {
-  background: var(--card-hover);
+  background: rgba(255,255,255,0.15);
 }
 
 .cat.active {
   background: var(--primary);
-  border-color: var(--primary);
-  color: #fff;
+  color: white;
 }
 
-/* ===========================================
-   COMPANY ITEM LIST
-=========================================== */
-.item {
+/* IMPORT BOX */
+.import-box {
   display: flex;
-  justify-content: space-between;
-  padding: 16px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+#importStatus { margin-top: 10px; font-size: 13px; color: var(--muted); }
+#importLog { background: #111; padding: 10px; font-size: 12px; display: none; }
+
+/* BUTTONS */
+.btn {
+  padding: 10px 16px;
   border-radius: var(--radius);
+  cursor: pointer;
+  border: none;
+  font-size: 14px;
+  margin: 4px 0;
+  transition: 0.2s ease;
+}
+
+.btn.small { padding: 6px 10px; }
+.btn.primary { background: var(--primary); color: white; }
+.btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn.danger { background: #ff3b30; color: white; }
+.btn.full { width: 100%; }
+.btn:hover { opacity: 0.85; }
+
+/* MAIN CONTENT */
+.main {
+  flex: 1;
+}
+
+.toolbar {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 18px;
+  align-items: center;
+}
+
+.search-input,
+.category-filter {
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.company-list { margin-top: 12px; }
+
+/* COMPANY ITEM */
+.item {
   background: var(--card);
   border: 1px solid var(--border);
-  transition: var(--transition);
+  padding: 16px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  transition: 0.2s ease;
 }
 
-.item:hover {
-  background: var(--card-hover);
-  transform: translateY(-2px);
-}
+.item:hover { background: var(--card-hover); transform: translateY(-2px); }
 
-.item.premium {
-  border-left: 4px solid gold;
-}
+.item.premium { border-left: 4px solid gold; }
 
 .meta {
   color: var(--muted);
   font-size: 13px;
 }
 
-/* CONTACT WITH WHATSAPP */
 .contact {
   display: flex;
+  gap: 6px;
   align-items: center;
-  gap: 4px;
 }
 
-/* WhatsApp Icon FIXED SIZE */
 .wp-icon {
-  width: 14px !important;
-  height: 14px !important;
-  vertical-align: middle;
-  opacity: 0.9;
+  width: 14px;
+  height: 14px;
+  opacity: 0.85;
   transition: 0.2s ease;
 }
 
@@ -215,9 +214,14 @@ input:focus,
   transform: scale(1.15);
 }
 
-/* ===========================================
-   MODAL
-=========================================== */
+/* CONTROLS */
+.controls button {
+  padding: 6px 10px;
+  margin-left: 6px;
+  font-size: 12px;
+}
+
+/* =============== MODAL =============== */
 .modal {
   position: fixed;
   inset: 0;
@@ -225,44 +229,60 @@ input:focus,
   display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 999;
 }
 
-.modal.hidden {
-  display: none;
-}
+.modal.hidden { display: none; }
 
 .modal-box {
-  width: 360px;
-  padding: 24px;
+  width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--modal-bg);
+  padding: 28px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  color: var(--text);
+  animation: pop 0.2s ease;
+}
+
+/* Modal animation */
+@keyframes pop {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* 2-Column Form Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 22px;
+  margin-top: 16px;
+}
+
+.form-grid .full {
+  grid-column: span 2;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--card);
-  border: 1px solid var(--border);
   color: var(--text);
 }
 
-.modal-box input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--input-bg);
-  color: var(--input-text);
+textarea {
+  min-height: 90px;
+  resize: vertical;
 }
 
-.modal-box input:focus {
-  border-color: var(--primary);
-}
-
-/* SPACING FIXES */
-.toolbar {
+.modal-actions {
+  margin-top: 20px;
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.controls button {
-  padding: 6px 10px;
-  margin-left: 6px;
-  font-size: 12px;
+  justify-content: space-between;
 }
