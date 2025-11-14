@@ -53,6 +53,8 @@ const btnImport = $("btnImport");
 const importStatus = $("importStatus");
 const importLog = $("importLog");
 
+const infoEl = $("info"); // small status text
+
 /* Modals */
 const editModal = $("editModal");
 const editName = $("editName");
@@ -73,8 +75,13 @@ let deletingId = null;
    LOAD CATEGORIES
 ============================ */
 async function loadCategories() {
-  const res = await fetch("/categories");
-  categories = await res.json();
+  try {
+    const res = await fetch("/categories");
+    categories = await res.json();
+  } catch (err) {
+    console.error("Failed to load categories", err);
+    categories = [];
+  }
 
   catsDiv.innerHTML = "";
   categoryFilter.innerHTML = `<option value="">— All categories —</option>`;
@@ -121,25 +128,30 @@ btnShowLogin.onclick = async () => {
   const p = prompt("Password", "change_me_123");
   if (!u || !p) return;
 
-  const r = await fetch("/admin/login", {
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({username:u,password:p})
-  });
+  try {
+    const r = await fetch("/admin/login", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({username:u,password:p})
+    });
 
-  const data = await r.json();
-  if (r.ok && data.token) {
-    setToken(data.token);
-    $("info").textContent = "Logged in";
-    refresh();
-  } else {
-    alert("Login failed");
+    const data = await r.json();
+    if (r.ok && data.token) {
+      setToken(data.token);
+      if (infoEl) infoEl.textContent = "Logged in";
+      refresh();
+    } else {
+      alert("Login failed");
+    }
+  } catch (err) {
+    console.error("Login error", err);
+    alert("Login error (see console)");
   }
 };
 
 btnLogout.onclick = () => {
   setToken(null);
-  $("info").textContent = "Logged out";
+  if (infoEl) infoEl.textContent = "Logged out";
   listEl.innerHTML = "";
 };
 
@@ -151,28 +163,33 @@ btnRefresh.onclick = refresh;
 async function refresh() {
   listEl.innerHTML = "<div class='small'>Loading…</div>";
 
-  const query = currentCategory ? `?categoryId=${currentCategory}` : "";
-  const rows = await api("/admin/companies" + query);
+  try {
+    const query = currentCategory ? `?categoryId=${currentCategory}` : "";
+    const rows = await api("/admin/companies" + query);
 
-  const text = filterText.value.trim().toLowerCase();
-  const filtered = text
-    ? rows.filter(r => (r.businessName || "").toLowerCase().includes(text))
-    : rows;
+    const text = (filterText.value || "").trim().toLowerCase();
+    const filtered = text
+      ? rows.filter(r => (r.businessName || "").toLowerCase().includes(text))
+      : rows;
 
-  if (!filtered.length) {
-    listEl.innerHTML = "<div class='small'>No companies found.</div>";
-    return;
+    if (!filtered.length) {
+      listEl.innerHTML = "<div class='small'>No companies found.</div>";
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(renderItem).join("");
+
+    listEl.querySelectorAll(".item").forEach(node => {
+      const id = node.dataset.id;
+
+      node.querySelector("[data-act='edit']").onclick = () => openEdit(id);
+      node.querySelector("[data-act='del']").onclick = () => openDelete(id);
+      node.querySelector("[data-act='premium']").onclick = () => setPremium(id);
+    });
+  } catch (err) {
+    console.error("Refresh error", err);
+    listEl.innerHTML = "<div class='small'>Failed to load companies (see console)</div>";
   }
-
-  listEl.innerHTML = filtered.map(renderItem).join("");
-
-  listEl.querySelectorAll(".item").forEach(node => {
-    const id = node.dataset.id;
-
-    node.querySelector("[data-act='edit']").onclick = () => openEdit(id);
-    node.querySelector("[data-act='del']").onclick = () => openDelete(id);
-    node.querySelector("[data-act='premium']").onclick = () => setPremium(id);
-  });
 }
 
 function renderItem(it) {
@@ -197,7 +214,7 @@ function renderItem(it) {
 
           ${
             it.contactNumber
-              ? `<a href="https://wa.me/${it.contactNumber}" target="_blank">${wpIcon}</a>`
+              ? `<a href="https://wa.me/${encodeURIComponent(it.contactNumber)}" target="_blank" rel="noopener noreferrer">${wpIcon}</a>`
               : ""
           }
         </div>
@@ -224,7 +241,8 @@ function escape(s) {
 function openEdit(id) {
   editingId = id;
 
-  api("/admin/companies")   // FIXED ❗ always load all companies
+  // load admin companies (server returns all when called without category)
+  api("/admin/companies")
     .then(rows => {
       const item = rows.find(r => String(r.id) === String(id));
       if (!item) return;
@@ -233,22 +251,28 @@ function openEdit(id) {
       editOwner.value = item.ownerName || "";
 
       editModal.classList.remove("hidden");
-    });
+    })
+    .catch(err => console.error("Failed to load company for edit", err));
 }
 
 editCancel.onclick = () => editModal.classList.add("hidden");
 
 editSave.onclick = async () => {
-  await api("/admin/companies/" + editingId, {
-    method:"PUT",
-    body:{
-      businessName: editName.value,
-      ownerName: editOwner.value
-    }
-  });
+  try {
+    await api("/admin/companies/" + editingId, {
+      method:"PUT",
+      body:{
+        businessName: editName.value,
+        ownerName: editOwner.value
+      }
+    });
 
-  editModal.classList.add("hidden");
-  refresh();
+    editModal.classList.add("hidden");
+    refresh();
+  } catch (err) {
+    console.error("Save edit failed", err);
+    alert("Save failed (see console)");
+  }
 };
 
 /* ============================
@@ -262,12 +286,14 @@ function openDelete(id) {
 deleteCancel.onclick = () => deleteModal.classList.add("hidden");
 
 deleteConfirm.onclick = async () => {
-  await api("/admin/companies/" + deletingId, {
-    method:"DELETE"
-  });
-
-  deleteModal.classList.add("hidden");
-  refresh();
+  try {
+    await api("/admin/companies/" + deletingId, { method:"DELETE" });
+    deleteModal.classList.add("hidden");
+    refresh();
+  } catch (err) {
+    console.error("Delete failed", err);
+    alert("Delete failed (see console)");
+  }
 };
 
 /* ============================
@@ -286,14 +312,135 @@ function setPremium(id) {
   api("/admin/companies/" + id + "/premium", {
     method:"POST",
     body:{start,end}
-  }).then(refresh);
+  }).then(refresh).catch(err => {
+    console.error("Set premium failed", err);
+    alert("Set premium failed (see console)");
+  });
 }
+
+/* ============================
+   IMPORT HANDLER
+   (multipart/form-data with token header)
+============================ */
+btnImport.onclick = async () => {
+  importStatus.textContent = "";
+  importLog.textContent = "";
+
+  const f = importFile.files[0];
+  if (!f) {
+    importStatus.textContent = "No file selected.";
+    return;
+  }
+
+  const allowed = [".xlsx", ".xls", ".csv"];
+  const idx = f.name.lastIndexOf(".");
+  const ext = idx >= 0 ? f.name.slice(idx).toLowerCase() : "";
+  if (!allowed.includes(ext)) {
+    importStatus.textContent = "Only .csv, .xls, .xlsx allowed.";
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("file", f); // IMPORTANT: server expects field name "file"
+
+  importStatus.textContent = "Uploading...";
+
+  try {
+    const token = getToken();
+    const headers = token ? { Authorization: "Bearer " + token } : {};
+
+    const res = await fetch("/admin/import", {
+      method: "POST",
+      headers,
+      body: fd
+    });
+
+    const text = await res.text().catch(()=>null);
+    let body;
+    try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+
+    if (!res.ok) {
+      importStatus.textContent = `Import failed (${res.status})`;
+      importLog.textContent = typeof body === "string" ? body : JSON.stringify(body, null, 2);
+      console.error("Import failed:", res.status, body);
+      return;
+    }
+
+    importStatus.textContent = "Import succeeded ✅";
+    importLog.textContent = typeof body === "string" ? body : JSON.stringify(body, null, 2);
+
+    // Refresh categories & list (import may have added categories)
+    await loadCategories();
+    refresh();
+  } catch (err) {
+    importStatus.textContent = "Import error (see console)";
+    importLog.textContent = String(err.stack || err);
+    console.error("Import error:", err);
+  }
+};
+
+/* ============================
+   EXPORT BUTTON (download XLSX or CSV)
+============================ */
+btnExport.onclick = async () => {
+  try {
+    const cat = currentCategory ? `&categoryId=${encodeURIComponent(currentCategory)}` : "";
+    const url = `/admin/export?format=xlsx${cat}`;
+
+    const token = getToken();
+    if (!token) return alert("Please login as admin to export.");
+
+    const res = await fetch(url, { headers: { Authorization: "Bearer " + token } });
+    if (!res.ok) {
+      const txt = await res.text();
+      console.error("Export failed", res.status, txt);
+      return alert("Export failed (see console).");
+    }
+
+    const blob = await res.blob();
+    const filename = res.headers.get("content-disposition")?.match(/filename="(.+)"/)?.[1] || `companies_${currentCategory || "all"}.xlsx`;
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (err) {
+    console.error("Export error", err);
+    alert("Export failed (see console).");
+  }
+};
+
+/* ============================
+   LIST ADMINS / NOTIFICATIONS (helper)
+   - server has /admin/notifications; we show them here if requested
+============================ */
+btnListAdmins.onclick = async () => {
+  try {
+    const token = getToken();
+    if (!token) return alert("Login required");
+
+    // example: fetch notifications to show activity (server has /admin/notifications)
+    const notes = await api("/admin/notifications");
+    if (!notes || !notes.length) {
+      alert("No notifications.");
+      return;
+    }
+
+    const msg = notes.slice(0,20).map(n => `${n.created_at} • ${n.type} • ${n.message}`).join("\n");
+    // show in a large prompt (quick and dirty)
+    alert(msg);
+  } catch (err) {
+    console.error("List admins/notifications error", err);
+    alert("Failed to fetch notifications (see console).");
+  }
+};
 
 /* ============================
    INIT
 ============================ */
 (async function init() {
   await loadCategories();
-  if (getToken()) $("info").textContent = "Logged in";
+  if (getToken() && infoEl) infoEl.textContent = "Logged in";
   refresh();
 })();

@@ -54,19 +54,23 @@ function requireAdmin(req, res, next) {
     req.adminId = user.adminId;
     next();
   } catch (err) {
-    console.error("Auth error", err.message);
+    console.error("Auth error", err && err.stack ? err.stack : err);
     res.status(401).json({ error: "Invalid token" });
   }
 }
 
 function normalizeCompanyRow(r) {
-  return { ...r, images: r.images ? JSON.parse(r.images) : [] };
+  try {
+    return { ...r, images: r.images ? JSON.parse(r.images) : [] };
+  } catch {
+    return { ...r, images: [] };
+  }
 }
 
 function getOrCreateUnknownCategory() {
   const existing = db
-    .prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER('unknown')")
-    .get();
+    .prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER(?)")
+    .get("unknown");
 
   if (existing) return existing.id;
 
@@ -76,27 +80,6 @@ function getOrCreateUnknownCategory() {
 
   return info.lastInsertRowid;
 }
-
-/* =====================================================
-   PUBLIC: SEARCH API — /api/companies?q=abc
-===================================================== */
-app.get("/api/companies", (req, res) => {
-  try {
-    const q = (req.query.q || "").trim().toLowerCase();
-    if (!q) return res.json([]);
-
-    const rows = db
-      .prepare(
-        "SELECT * FROM companies WHERE LOWER(businessName) LIKE ? ORDER BY id DESC"
-      )
-      .all(`%${q}%`);
-
-    res.json(rows.map(normalizeCompanyRow));
-  } catch (err) {
-    console.error("Public search error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
 
 /* =====================================================
    PUBLIC: ADD COMPANY (Category optional)
@@ -129,37 +112,46 @@ app.post("/api/companies", upload.array("images", 10), (req, res) => {
 
     /* ------------ Insert ------------ */
     const stmt = db.prepare(`
-      INSERT INTO companies (
-        businessName, ownerName, officeAddress, businessAddress,
-        gstNo, category, category_id, state, contactNumber,
-        whatsappNumber, email, website, capacity,
-        description, uploaderMobile, images
-      )
-      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `);
+  INSERT INTO companies (
+    businessName, ownerName, officeAddress, businessAddress,
+    gstNo, category, state, contactNumber,
+    whatsappNumber, email, website, capacity,
+    description, uploaderMobile, images,
+    is_premium, premium_start, premium_end,
+    created_at, updated_at, category_id
+  )
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+`);
+
 
     const info = stmt.run(
-      b.businessName,
-      b.ownerName || "",
-      b.officeAddress || "",
-      b.businessAddress || "",
-      b.gstNo || "",
-      b.category || "",
-      categoryId,
-      b.state,
-      b.contactNumber || "",
-      b.whatsappNumber || "",
-      b.email || "",
-      b.website || "",
-      b.capacity || "",
-      b.description || "",
-      b.uploaderMobile || "",
-      imagesJson
-    );
+  b.businessName,
+  b.ownerName || "",
+  b.officeAddress || "",
+  b.businessAddress || "",
+  b.gstNo || "",
+  b.category || "",
+  b.state || "",
+  b.contactNumber || "",
+  b.whatsappNumber || "",
+  b.email || "",
+  b.website || "",
+  b.capacity || "",
+  b.description || "",
+  b.uploaderMobile || "",
+  imagesJson,
+  0,            // is_premium
+  null,         // premium_start
+  null,         // premium_end
+  new Date().toISOString(), // created_at
+  new Date().toISOString(), // updated_at
+  categoryId
+);
+
 
     res.json({ success: true, id: info.lastInsertRowid });
   } catch (err) {
-    console.error("Add company error:", err);
+    console.error("Add company error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -174,7 +166,7 @@ app.get("/categories", (req, res) => {
       .all();
     res.json(rows);
   } catch (err) {
-    console.error("Category load error:", err);
+    console.error("Category load error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -207,7 +199,7 @@ app.post("/admin/login", async (req, res) => {
 
     res.json({ token });
   } catch (err) {
-    console.error("Admin login error:", err);
+    console.error("Admin login error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -239,7 +231,7 @@ app.get("/admin/companies", requireAdmin, (req, res) => {
 
     res.json(rows.map(normalizeCompanyRow));
   } catch (err) {
-    console.error("Admin list companies error:", err);
+    console.error("Admin list companies error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -281,7 +273,7 @@ app.put("/admin/companies/:id", requireAdmin, (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error("Admin update company error:", err);
+    console.error("Admin update company error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -302,7 +294,7 @@ app.delete("/admin/companies/:id", requireAdmin, (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error("Delete error:", err);
+    console.error("Delete error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -329,7 +321,7 @@ app.post("/admin/companies/:id/premium", requireAdmin, (req, res) => {
 
     res.json({ ok: true });
   } catch (err) {
-    console.error("Set premium error:", err);
+    console.error("Set premium error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -345,7 +337,7 @@ app.get("/admin/notifications", requireAdmin, (req, res) => {
 
     res.json(rows);
   } catch (err) {
-    console.error("Notification error:", err);
+    console.error("Notification error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -393,7 +385,7 @@ setInterval(() => {
       );
     });
   } catch (err) {
-    console.error("Premium cron error:", err);
+    console.error("Premium cron error:", err && err.stack ? err.stack : err);
   }
 }, 60 * 1000);
 
@@ -420,7 +412,7 @@ app.get("/admin/export", requireAdmin, async (req, res) => {
         SELECT c.*, cat.name AS category_name
         FROM companies c
         LEFT JOIN categories cat ON c.category_id = cat.id
-        ORDER ORDER BY c.id ASC
+        ORDER BY c.id ASC
       `).all();
     }
 
@@ -486,13 +478,13 @@ app.get("/admin/export", requireAdmin, async (req, res) => {
     await wb.xlsx.write(res);
     res.end();
   } catch (err) {
-    console.error("Export error:", err);
+    console.error("Export error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
 /* =====================================================
-   IMPORT (Auto detect CSV + XLSX)
+   IMPORT (Auto detect CSV + XLSX) - improved & safe
 ===================================================== */
 app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) => {
   try {
@@ -504,12 +496,23 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
 
     let rowsToInsert = [];
 
+    // helper to get/create category id
+    const getCategoryIdForName = (name) => {
+      if (!name) return getOrCreateUnknownCategory();
+      const found = db.prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER(?)").get(name.trim());
+      return found ? found.id : getOrCreateUnknownCategory();
+    };
+
     /* -------------------------------------------------
-       CASE 1: CSV IMPORT
+       CASE 1: CSV IMPORT (naive split)
     ------------------------------------------------- */
     if (ext === ".csv") {
       const raw = fs.readFileSync(filePath, "utf8");
       const lines = raw.split(/\r?\n/).filter(x => x.trim() !== "");
+      if (lines.length < 2) {
+        fs.unlinkSync(filePath);
+        return res.status(400).json({ error: "CSV has no data rows" });
+      }
 
       const headers = lines[0].split(",").map(h => h.trim());
 
@@ -523,18 +526,9 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
 
         if (!obj.businessName || !obj.state) continue;
 
-        let cid = null;
-        if (obj.category) {
-          const found = db
-            .prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER(?)")
-            .get(obj.category);
-          if (found) cid = found.id;
-        }
-        if (!cid) cid = getOrCreateUnknownCategory();
-
         rowsToInsert.push({
           ...obj,
-          category_id: cid
+          category_id: getCategoryIdForName(obj.category)
         });
       }
     }
@@ -542,12 +536,15 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
     /* -------------------------------------------------
        CASE 2: XLSX IMPORT
     ------------------------------------------------- */
-    else if (ext === ".xlsx") {
+    else if (ext === ".xlsx" || ext === ".xls") {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.readFile(filePath);
 
       const sheet = workbook.worksheets[0];
-      if (!sheet) return res.status(400).json({ error: "No sheet found" });
+      if (!sheet) {
+        fs.unlinkSync(filePath);
+        return res.status(400).json({ error: "No sheet found in xlsx" });
+      }
 
       const headerRow = sheet.getRow(1);
       const headers = [];
@@ -555,69 +552,86 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
         headers[n] = (cell.text || "").trim();
       });
 
+      // require at least businessName and state headers
+      const lowerHeaders = headers.map(h => (h || "").toLowerCase());
+      if (!lowerHeaders.includes("businessname") || !lowerHeaders.includes("state")) {
+        fs.unlinkSync(filePath);
+        return res.status(400).json({ error: "Missing required headers: businessName and/or state" });
+      }
+
       sheet.eachRow((row, rowNum) => {
         if (rowNum === 1) return;
 
         const obj = {};
-
         row.eachCell((cell, col) => {
           const h = (headers[col] || "").trim();
           const v = (cell.text || "").toString().trim();
-          obj[h] = v;
+          if (h) obj[h] = v;
         });
+
+        if (!obj.businessName && !obj.businessname) {
+          // try lowercase header fallback
+          const bn = obj.businessname || obj.BusinessName || obj["businessName"];
+          if (!bn) return;
+        }
+
+        // normalize: prefer camel-case header if present, else lowercase
+        if (!obj.businessName && obj.businessname) obj.businessName = obj.businessname;
+        if (!obj.state && obj.State) obj.state = obj.State;
+        if (!obj.state && obj.state === undefined && obj.STATE) obj.state = obj.STATE;
 
         if (!obj.businessName || !obj.state) return;
 
-        let cid = null;
-        if (obj.category) {
-          const found = db
-            .prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER(?)")
-            .get(obj.category);
-          if (found) cid = found.id;
-        }
-        if (!cid) cid = getOrCreateUnknownCategory();
-
         rowsToInsert.push({
           ...obj,
-          category_id: cid
+          category_id: getCategoryIdForName(obj.category)
         });
       });
+    } else {
+      fs.unlinkSync(filePath);
+      return res.status(400).json({ error: "Unsupported file type" });
+    }
+
+    if (!rowsToInsert.length) {
+      fs.unlinkSync(filePath);
+      return res.status(400).json({ error: "No valid rows to import" });
     }
 
     /* -------------------------------------------------
-       PERFORM BULK INSERT
-    ------------------------------------------------- */
-    const insertStmt = db.prepare(`
-      INSERT INTO companies (
-        businessName, ownerName, category, category_id,
-        state, contactNumber, whatsappNumber, email,
-        website, gstNo, capacity, description,
-        images, created_at
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-    `);
+   PERFORM BULK INSERT (IMPORT) - placeholders must match
+------------------------------------------------- */
+const insertStmt = db.prepare(`
+  INSERT INTO companies (
+    businessName, ownerName, category, category_id,
+    state, contactNumber, whatsappNumber, email,
+    website, gstNo, capacity, description,
+    images, created_at
+  ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+`);
 
-    const insertMany = db.transaction(() => {
-      rowsToInsert.forEach(r => {
-        insertStmt.run(
-          r.businessName || "",
-          r.ownerName || "",
-          r.category || "",
-          r.category_id,
-          r.state || "",
-          r.contactNumber || "",
-          r.whatsappNumber || "",
-          r.email || "",
-          r.website || "",
-          r.gstNo || "",
-          r.capacity || "",
-          r.description || "",
-          JSON.stringify([]),
-          new Date().toISOString()
-        );
-      });
-    });
+const insertMany = db.transaction(() => {
+  rowsToInsert.forEach(r => {
+    insertStmt.run(
+      r.businessName || "",
+      r.ownerName || "",
+      r.category || "",
+      r.category_id,
+      r.state || "",
+      r.contactNumber || "",
+      r.whatsappNumber || "",
+      r.email || "",
+      r.website || "",
+      r.gstNo || "",
+      r.capacity || "",
+      r.description || "",
+      JSON.stringify([]),
+      new Date().toISOString()
+    );
+  });
+});
 
-    insertMany();
+insertMany();
+
 
     fs.unlinkSync(filePath);
 
@@ -626,13 +640,47 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
       imported: rowsToInsert.length
     });
   } catch (err) {
-    console.error("Import error:", err);
+    // print full stack so you can paste it if something goes wrong
+    console.error("Import error:", err && err.stack ? err.stack : err);
     res.status(500).json({
       error: "Import failed",
-      detail: err.message
+      detail: err && err.message ? err.message : String(err)
     });
   }
 });
+
+app.get("/api/companies", (req, res) => {
+  const q = req.query.q ? req.query.q.trim() : "";
+
+  // No search → return all rows
+  if (!q) {
+    const rows = db.prepare("SELECT * FROM companies ORDER BY id DESC").all();
+    return res.json(rows);
+  }
+
+  const search = `%${q}%`;
+
+  const sql = `
+    SELECT * FROM companies
+    WHERE 
+      businessName LIKE ? OR
+      ownerName LIKE ? OR
+      category LIKE ? OR
+      state LIKE ? OR
+      contactNumber LIKE ? OR
+      description LIKE ? OR
+      gstNo LIKE ?
+    ORDER BY id DESC
+  `;
+
+  const params = [search, search, search, search, search, search, search];
+
+  const rows = db.prepare(sql).all(...params);
+  return res.json(rows);
+});
+
+
+
 
 /* =====================================================
    START SERVER
@@ -640,4 +688,3 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
 app.listen(PORT, () =>
   console.log(`🚀 Server running at http://localhost:${PORT}`)
 );
-

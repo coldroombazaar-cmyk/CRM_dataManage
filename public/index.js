@@ -50,14 +50,13 @@ addForm.onsubmit = async e => {
 
   const fd = new FormData(addForm);
 
-  // also attach category name
   const catId = fd.get("categoryId");
   if (catId) {
     const selected = categorySelect.selectedOptions[0]?.textContent;
     fd.append("category", selected);
   }
 
-  const r = await fetch("/api/companies", { method:"POST", body:fd });
+  const r = await fetch("/api/companies", { method: "POST", body: fd });
   const data = await r.json();
 
   if (data.success) {
@@ -68,7 +67,7 @@ addForm.onsubmit = async e => {
     msg.textContent = data.error || "Failed";
   }
 
-  setTimeout(() => msg.textContent = "", 2000);
+  setTimeout(() => (msg.textContent = ""), 2000);
 };
 
 $("clear").onclick = () => {
@@ -77,57 +76,40 @@ $("clear").onclick = () => {
 };
 
 /* ===============================================
-   LIVE SUGGEST
+   LIVE SUGGEST — REMOVED
 =============================================== */
-searchBox.oninput = async () => {
-  const q = searchBox.value.trim();
-  if (!q) return (suggestBox.style.display = "none");
-
-  const r = await fetch("/api/companies?q=" + encodeURIComponent(q));
-  const list = await r.json();
-
-  if (!list.length) return (suggestBox.style.display = "none");
-
-  suggestBox.innerHTML = list
-    .slice(0, 5)
-    .map(item => `<div class="suggest-item" data-name="${item.businessName}">${item.businessName}</div>`)
-    .join("");
-
-  suggestBox.style.display = "block";
-
-  document.querySelectorAll(".suggest-item").forEach(el => {
-    el.onclick = () => {
-      searchBox.value = el.dataset.name;
-      suggestBox.style.display = "none";
-      doSearch();
-    };
-  });
+searchBox.oninput = () => {
+  suggestBox.style.display = "none";
 };
-
-searchBox.onblur = () =>
-  setTimeout(() => (suggestBox.style.display = "none"), 200);
 
 /* ===============================================
    SEARCH
 =============================================== */
 searchBtn.onclick = doSearch;
-searchBox.onkeydown = e => e.key === "Enter" && doSearch();
+
+searchBox.onkeydown = e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    doSearch();
+  }
+};
 
 async function doSearch() {
   const q = searchBox.value.trim();
   const cat = searchCategory.value;
-  if (!q) return;
 
   results.innerHTML = "Searching...";
 
-  const r = await fetch("/api/companies?q=" + encodeURIComponent(q));
-  let list = await r.json();
+  let url = "/api/companies?q=" + encodeURIComponent(q);
+  if (cat) url += "&categoryId=" + encodeURIComponent(cat);
 
-  if (cat)
-    list = list.filter(x => String(x.category_id) === String(cat));
+  const r = await fetch(url);
+  const list = await r.json();
 
-  if (!list.length)
-    return (results.textContent = "No results found.");
+  if (!list.length) {
+    results.textContent = "No results found.";
+    return;
+  }
 
   results.innerHTML = list.map(render).join("");
 }

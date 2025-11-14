@@ -10,6 +10,9 @@
 
 <body>
 
+<!-- THEME TOGGLE -->
+<button id="themeToggle" class="theme-btn">🌙</button>
+
 <div class="app">
 
   <!-- HEADER -->
@@ -27,7 +30,7 @@
     <aside class="sidebar">
 
       <!-- CATEGORIES -->
-      <div class="card">
+      <div class="card glass">
         <div class="row-between">
           <strong>Categories</strong>
           <button id="btnNewCategory" class="btn ghost small">+ New</button>
@@ -49,7 +52,7 @@
       </div>
 
       <!-- ADMIN -->
-      <div class="card">
+      <div class="card glass">
         <strong>Admin</strong>
 
         <div class="admin-actions">
@@ -64,8 +67,7 @@
 
     <!-- MAIN AREA -->
     <main class="main">
-
-      <div class="card">
+      <div class="card glass">
 
         <div class="toolbar">
           <input id="filterText" placeholder="Search business…" class="search-input">
@@ -81,16 +83,13 @@
           <div class="small">Click Refresh</div>
         </div>
       </div>
-
     </main>
   </div>
 </div>
 
-<!-- ===================== MODALS ===================== -->
-
 <!-- EDIT MODAL -->
 <div class="modal hidden" id="editModal">
-  <div class="modal-box">
+  <div class="modal-box glass">
     <h3>Edit Company</h3>
 
     <label>Business Name</label>
@@ -108,7 +107,7 @@
 
 <!-- DELETE MODAL -->
 <div class="modal hidden" id="deleteModal">
-  <div class="modal-box">
+  <div class="modal-box glass">
     <h3>Delete Company?</h3>
     <p>This action cannot be undone.</p>
 
@@ -120,6 +119,26 @@
 </div>
 
 <script src="admin-panel.js"></script>
+
+<script>
+const btn = document.getElementById("themeToggle");
+
+// Load saved theme
+if (localStorage.getItem("theme") === "light") {
+  document.body.classList.add("light");
+  btn.textContent = "🌙";
+} else {
+  btn.textContent = "☀️";
+}
+
+btn.onclick = () => {
+  document.body.classList.toggle("light");
+  const isLight = document.body.classList.contains("light");
+  localStorage.setItem("theme", isLight ? "light" : "dark");
+  btn.textContent = isLight ? "🌙" : "☀️";
+};
+</script>
+
 
 </body>
 </html>
