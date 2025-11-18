@@ -10,6 +10,7 @@
 :root {
   --bg: #0d1117;
   --card: rgba(255,255,255,0.06);
+  --card-bg: rgba(0, 0, 0, 1);
   --card-hover: rgba(255,255,255,0.12);
   --text: #e6eefc;
   --muted: #9aa4b5;
@@ -23,6 +24,7 @@
 body.light {
   --bg: #eef3ff;
   --card: rgba(255,255,255,0.9);
+  --card-bg: rgba(255, 255, 255, 1);
   --card-hover: rgba(240,240,240,1);
   --text: #111;
   --muted: #666;
@@ -86,44 +88,380 @@ body {
   align-items: flex-start;
 }
 
-/* SIDEBAR */
+/* SIDEBAR *//* -----------------------------------------------
+   GLOBAL
+----------------------------------------------- */
+body {
+  margin: 0;
+  font-family: Segoe UI, sans-serif;
+  background: #0f131a;
+  color: #dce3ea;
+  transition: 0.25s;
+}
+
+body.light {
+  background: #f5f7fa;
+  color: #111;
+}
+
+.app {
+  padding: 10px 20px;
+}
+
+/* -----------------------------------------------
+   HEADER
+----------------------------------------------- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.sub {
+  opacity: 0.7;
+  font-size: 14px;
+}
+
+/* -----------------------------------------------
+   THEME BUTTON
+----------------------------------------------- */
+.theme-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  padding: 8px 12px;
+  font-size: 22px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  background: #1f2633;
+  color: #ffbf47;
+  z-index: 1000;
+}
+body.light .theme-btn {
+  background: #fff;
+  color: #111;
+}
+
+/* -----------------------------------------------
+   LAYOUT
+----------------------------------------------- */
+.layout {
+  display: flex;
+  gap: 20px;
+}
+
+/* -----------------------------------------------
+   SIDEBAR
+----------------------------------------------- */
 .sidebar {
-  width: 350px;
+  width: 330px;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
 }
 
 .card {
-  padding: 22px;
-  border-radius: var(--radius);
-  background: var(--card);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(14px);
-  transition: 0.25s ease;
+  background: #161d26;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px #222;
 }
 
-.card:hover {
-  background: var(--card-hover);
+body.light .card {
+  background: #fff;
+  box-shadow: 0 0 0 1px #ccc;
 }
 
-/* CATEGORY LIST */
+/* -----------------------------------------------
+   CATEGORY SEARCH
+----------------------------------------------- */
+.search-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #12171f;
+  color: #dce3ea;
+}
+
+body.light .search-input {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #000;
+}
+
+/* -----------------------------------------------
+   CATEGORY LIST (scrollable)
+----------------------------------------------- */
+.cat-list {
+  max-height: 450px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
 .cat {
   padding: 10px 12px;
-  border-radius: var(--radius);
+  border-radius: 10px;
+  background: #1c2330;
   margin-bottom: 8px;
   cursor: pointer;
-  background: rgba(255,255,255,0.05);
-  transition: 0.2s;
+  transition: 0.25s;
+  font-size: 15px;
 }
-
 .cat:hover {
-  background: rgba(255,255,255,0.15);
+  background: #253044;
+}
+.cat.active {
+  background: #007bff;
+  color: #fff;
 }
 
-.cat.active {
-  background: var(--primary);
+/* Light Mode */
+body.light .cat {
+  background: #f3f3f3;
+}
+body.light .cat:hover {
+  background: #e2e2e2;
+}
+body.light .cat.active {
+  background: #007bff;
   color: #fff;
+}
+
+/* -----------------------------------------------
+   MAIN CONTENT
+----------------------------------------------- */
+.main {
+  flex: 1;
+}
+
+/* -----------------------------------------------
+   TOOLBAR
+----------------------------------------------- */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-filter {
+  padding: 10px;
+  width: 260px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #12171f;
+  color: #dce3ea;
+}
+
+body.light .category-filter {
+  background: #fff;
+  border-color: #ccc;
+  color: #000;
+}
+
+/* -----------------------------------------------
+   BUTTONS
+----------------------------------------------- */
+.btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-size: 14px;
+  transition: 0.25s;
+}
+
+.btn.primary { background: #008cff; color: #fff; }
+.btn.ghost   { background: #1f2633; color: #dce3ea; border-color: #333; }
+.btn.danger  { background: #e63946; color: #fff; }
+
+.btn.small {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+/* Light Mode Button Fix */
+body.light .btn.ghost {
+  background: #fff;
+  border-color: #ccc;
+  color: #333;
+}
+
+/* -----------------------------------------------
+   COMPANY CARDS
+----------------------------------------------- */
+.company-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item {
+  background: #161d26;
+  padding: 18px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  border-left: 6px solid transparent;
+}
+
+body.light .item {
+  background: #fff;
+  border-left-color: transparent;
+}
+
+.item.premium {
+  border-left-color: #f7c948;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+}
+.meta {
+  opacity: 0.75;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.contact {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.controls button {
+  margin-left: 6px;
+}
+
+/* -----------------------------------------------
+   PAGINATION
+----------------------------------------------- */
+.pagination-bar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 0;
+  margin-top: 20px;
+  border-top: 1px solid #222;
+}
+
+body.light .pagination-bar {
+  border-color: #ccc;
+}
+
+/* -----------------------------------------------
+   MODAL
+----------------------------------------------- */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 800;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.modal-box {
+  background: #161d26;
+  padding: 20px;
+  width: 500px;
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px #222;
+}
+
+body.light .modal-box {
+  background: #fff;
+  box-shadow: 0 0 0 1px #ccc;
+}
+
+.form-grid {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  grid-template-columns: repeat(2, 1fr);
+}
+.form-grid .full {
+  grid-column: 1 / 3;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* -----------------------------------------------
+   WHATSAPP ICON FIX
+----------------------------------------------- */
+.wp-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.sidebar {
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Category box height control */
+#cats {
+    max-height: 380px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Add scrollbar style */
+#cats::-webkit-scrollbar {
+  width: 6px;
+}
+#cats::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+/* Compact Category Buttons */
+.cat {
+  padding: 8px 12px;
+  font-size: 15px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+}
+
+/* MAIN top category dropdown height & scroll */
+.category-filter {
+  max-height: 42px;
+  overflow: hidden;
+}
+
+/* Dropdown scroll if many categories */
+select.category-filter option {
+  padding: 8px;
+  font-size: 14px;
 }
 
 /* IMPORT BOX */
@@ -383,4 +721,65 @@ textarea {
 .btn.small {
   padding: 6px 12px;
   font-size: 13px;
+}
+/*_dropdown container*/
+.dropdown {
+    position: relative;
+    width: 240px;
+    font-size: 14px;
+}
+
+/* selected bar */
+.dropdown-selected {
+    background: var(--card-bg);
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+/* menu */
+.dropdown-menu {
+    position: absolute;
+    top: 52px;
+    left: 0;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    z-index: 1000;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+/* hide menu */
+.dropdown-menu.hidden {
+    display: none;
+}
+
+/* search bar inside dropdown */
+.dropdown-search {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text);
+}
+
+/* options */
+.dropdown-options div {
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: var(--text);
+}
+
+.dropdown-options div:hover {
+    background: var(--hover);
 }

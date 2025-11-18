@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>Admin Panel</title>
+
 <link rel="stylesheet" href="admin-panel.css">
 </head>
 
 <body>
 
+<!-- THEME BUTTON -->
 <button id="themeToggle" class="theme-btn">☀️</button>
 
 <div class="app">
@@ -26,8 +28,18 @@
   <div class="sidebar">
 
     <div class="card">
-      <h3>Categories</h3>
-      <div id="cats" style="margin-top:12px;"></div>
+        <h3>Categories</h3>
+
+        <!-- Category search -->
+        <input 
+            id="categorySearch" 
+            type="text" 
+            placeholder="Search categories..." 
+            class="search-input"
+            style="margin: 10px 0; width:100%;"
+        >
+
+        <div id="cats" style="margin-top:12px;"></div>
     </div>
 
     <div class="card">
@@ -42,7 +54,6 @@
       <button id="btnExport" class="btn full ghost">Export XLSX</button>
       <button id="btnListAdmins" class="btn full ghost">Notifications</button>
       <button id="btnDeleteSelected" class="btn full danger">Delete Selected</button>
-      <button id="btnLogout" class="btn full danger">Logout</button>
     </div>
 
   </div>
@@ -51,27 +62,44 @@
   <div class="main">
 
     <div class="toolbar">
+
+      <!-- SEARCH COMPANY -->
       <input type="text" id="filterText" placeholder="Search companies..." class="search-input">
-      <select id="categoryFilter" class="category-filter"></select>
+
+      <!-- Correct Category Dropdown -->
+      <div class="dropdown" id="categoryDropdown">
+          <div class="dropdown-selected" id="categorySelected">All categories</div>
+
+          <div class="dropdown-menu hidden" id="categoryMenu">
+              <input type="text" id="categorySearchInput" placeholder="Search category..." class="dropdown-search">
+
+              <div id="categoryOptions" class="dropdown-options"></div>
+          </div>
+      </div>
 
       <button id="btnRefresh" class="btn primary">Refresh</button>
+      <button id="btnExport" class="btn ghost">Export XLSX</button>
+      <button id="btnListAdmins" class="btn ghost">Notifications</button>
+      <button id="btnLogout" class="btn danger">Logout</button>
+      <button id="btnDeleteSelected" class="btn danger">Delete Selected</button>
     </div>
 
+    <!-- COMPANY LIST -->
     <div id="list" class="company-list"></div>
-
-    <!-- PAGINATION BAR (INSIDE MAIN) -->
-    <div class="pagination-bar">
-        <button id="btnPrevPage" class="btn ghost small">← Prev</button>
-        <span id="pageInfo">Page 1 / 1</span>
-        <button id="btnNextPage" class="btn ghost small">Next →</button>
-
-        <button id="btnGoTop" class="btn primary small" style="margin-left:auto;">
-            Go to Top ↑
-        </button>
-    </div>
 
   </div>
 
+</div>
+
+<!-- PAGINATION BAR -->
+<div class="pagination-bar">
+    <button id="btnPrevPage" class="btn ghost small">← Prev</button>
+    <span id="pageInfo">Page 1 / 1</span>
+    <button id="btnNextPage" class="btn ghost small">Next →</button>
+
+    <button id="btnGoTop" class="btn primary small" style="margin-left:auto;">
+        Go to Top ↑
+    </button>
 </div>
 
 </div>
@@ -131,23 +159,22 @@
 
 <script>
 // THEME HANDLER
-const themeBtn = document.getElementById("themeToggle");
-
+const btn = document.getElementById("themeToggle");
 if (localStorage.getItem("theme") === "light") {
   document.body.classList.add("light");
-  themeBtn.textContent = "🌙";
+  btn.textContent = "🌙";
 } else {
-  themeBtn.textContent = "☀️";
+  btn.textContent = "☀️";
 }
 
-themeBtn.onclick = () => {
+btn.onclick = () => {
   document.body.classList.toggle("light");
   const mode = document.body.classList.contains("light") ? "light" : "dark";
   localStorage.setItem("theme", mode);
-  themeBtn.textContent = mode === "light" ? "🌙" : "☀️";
+  btn.textContent = mode === "light" ? "🌙" : "☀️";
 };
 
-// NOT LOGGED IN → REDIRECT TO LOGIN
+// If no token → redirect to login
 if (!localStorage.getItem("admin_token")) {
   window.location.href = "/admin.html";
 }

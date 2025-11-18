@@ -1,5 +1,3 @@
-// init-db.js
-// Usage: node init-db.js
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
@@ -11,12 +9,12 @@ if (fs.existsSync(DB_FILE)) {
 
 const db = new Database(DB_FILE);
 
-// helper to run many sql statements safely
+// helper
 function run(sql) {
   db.exec(sql);
 }
 
-// Create tables if not exists
+// Create Tables
 run(`
 PRAGMA foreign_keys = ON;
 
@@ -73,19 +71,20 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 `);
 
-// ensure at least one admin exists (username: admin, password: change_me_123)
 (async () => {
+
+  // Admin
   const row = db.prepare('SELECT id FROM admins WHERE username = ?').get('admin');
   if (!row) {
     const pass = 'change_me_123';
     const hash = await bcrypt.hash(pass, 10);
-    const info = db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run('admin', hash);
-    console.log('Admin created: username=admin password=' + pass);
+    db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run('admin', hash);
+    console.log('Admin created: admin / ' + pass);
   } else {
-    console.log('Admin "admin" already exists (id=' + row.id + ')');
+    console.log('Admin exists (id=' + row.id + ')');
   }
 
-  // add an "Unknown" category if missing
+  // Unknown category
   const cat = db.prepare('SELECT id FROM categories WHERE LOWER(name)=LOWER(?)').get('unknown');
   if (!cat) {
     const res = db.prepare('INSERT INTO categories (name, slug) VALUES (?, ?)').run('Unknown', 'unknown');
@@ -93,6 +92,65 @@ CREATE TABLE IF NOT EXISTS notifications (
   } else {
     console.log('Unknown category exists id=' + cat.id);
   }
+
+  // ================================
+  // ColdRoomBazaar Master Categories
+  // ================================
+  const masterCategories = [
+    "Cold Rooms",
+    "Banana Ripening Chambers",
+    "PUF Panels",
+    "Insulation Materials",
+    "Refrigeration Units",
+    "Condensing Units",
+    "Evaporators",
+    "Cold Storage Construction",
+    "Industrial Cold Rooms",
+    "Walk-in Freezers",
+    "Blast Chillers",
+    "Blast Freezers",
+    "Vegetable Cold Storage",
+    "Dairy Cold Storage",
+    "Ice Cream Cold Rooms",
+    "Meat & Fish Cold Storage",
+    "Commercial Refrigeration",
+    "Solar Cold Rooms",
+    "Ripening Solutions",
+    "Warehouse Cooling",
+    "PUF Doors",
+    "Cold Room Accessories",
+    "Display Counters",
+    "Cold Chain Equipment",
+    "Industrial Insulation",
+    "Reefer Units",
+    "HVAC Contractors",
+    "PUF Panel Contractors",
+    "Cold Room AMC",
+    "Cold Room Repairing",
+    "Cold Room Installation",
+    "Scaffolding",
+    "Lift & Material Handling",
+    "Construction Machinery",
+    "Cooling Towers",
+    "Chillers",
+    "Freezer Rooms",
+    "Cold Storage Equipment"
+  ];
+
+  console.log("\nChecking master categories...");
+
+  masterCategories.forEach(name => {
+    const exists = db.prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER(?)").get(name);
+    if (!exists) {
+      db.prepare("INSERT INTO categories (name, slug) VALUES (?, ?)").run(
+        name,
+        name.toLowerCase().replace(/ /g, "-")
+      );
+      console.log("Added category:", name);
+    }
+  });
+
+  console.log("Master categories sync complete.");
 
   db.close();
 })();

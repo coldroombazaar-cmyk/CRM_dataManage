@@ -1,26 +1,18 @@
 /* ============================================================
-   WhatsApp Icon (SVG)
+   SHORTCUTS & GLOBALS
 ============================================================ */
-const wpIcon = `
-  <svg class="wp-icon" viewBox="0 0 32 32" fill="#25D366">
-    <path d="M16 .5C7.44.5.5 7.44.5 16c0 2.83.74 5.58 2.14 8.02L.5 31.5l7.73-2.03A15.36 15.36 0 0 0 16 31.5C24.56 31.5 31.5 24.56 31.5 16S24.56.5 16 .5Zm0 28.2c-2.44 0-4.83-.65-6.92-1.88l-.5-.29-4.58 1.2 1.22-4.46-.32-.57A13.08 13.08 0 0 1 2.8 16c0-7.27 5.93-13.2 13.2-13.2 7.27 0 13.2 5.93 13.2 13.2S23.27 28.7 16 28.7Zm7.33-10.08c-.4-.2-2.36-1.17-2.73-1.31-.36-.13-.63-.2-.9.2-.27.4-1.03 1.31-1.27 1.58-.23.27-.47.3-.87.1-.4-.2-1.68-.62-3.2-2-.12-.1-1.1-.97-1.32-1.88-.23-.9.14-1.35.35-1.57.18-.18.4-.47.6-.7.2-.23.27-.4.4-.67.13-.27.07-.5 0-.7-.07-.2-.9-2.17-1.23-2.97-.33-.8-.67-.7-.9-.7h-.77c-.27 0-.7.1-1.06.5-.36.4-1.4 1.36-1.4 3.32 0 1.96 1.43 3.85 1.63 4.12.2.27 2.8 4.27 6.82 5.98 4.02 1.71 4.02 1.14 4.74 1.07.72-.07 2.36-.96 2.7-1.9.33-.93.33-1.73.23-1.9-.1-.17-.36-.27-.77-.47Z"/>
-  </svg>
-`;
-
-/* SHORTCUT */
 const $ = id => document.getElementById(id);
-
-/* TOKEN HELPERS */
 const tokenKey = "admin_token";
-const getToken = () => localStorage.getItem(tokenKey) || "";
+const getToken = () => localStorage.getItem(tokenKey);
 const setToken = v =>
   v ? localStorage.setItem(tokenKey, v) : localStorage.removeItem(tokenKey);
 
-/* BASIC API WRAPPER */
+/* ============================================================
+   API WRAPPER
+============================================================ */
 async function api(path, opts = {}) {
   opts.headers = opts.headers || {};
   const token = getToken();
-
   if (!token) {
     window.location.href = "/admin.html";
     return;
@@ -34,47 +26,48 @@ async function api(path, opts = {}) {
   }
 
   const res = await fetch(path, opts);
-
   if (res.status === 401) {
     setToken(null);
-    alert("Session expired. Please login again.");
     window.location.href = "/admin.html";
     return;
   }
 
-  const txt = await res.text().catch(() => null);
+  const text = await res.text();
   try {
-    return txt ? JSON.parse(txt) : null;
+    return text ? JSON.parse(text) : null;
   } catch {
-    return txt;
+    return text;
   }
 }
 
-/* DOM ELEMENTS */
+/* ============================================================
+   DOM ELEMENTS
+============================================================ */
 const catsDiv = $("cats");
-const categoryFilter = $("categoryFilter");
+const catSearch = $("categorySearch");
 const filterText = $("filterText");
 const listEl = $("list");
 
-const btnLogout = $("btnLogout");
 const btnRefresh = $("btnRefresh");
+const btnLogout = $("btnLogout");
 const btnExport = $("btnExport");
 const btnListAdmins = $("btnListAdmins");
 const btnDeleteSelected = $("btnDeleteSelected");
 
-/* pagination controls (may be null if HTML-এ নাই) */
 const btnPrevPage = $("btnPrevPage");
 const btnNextPage = $("btnNextPage");
+const btnGoTop = $("btnGoTop");
 const pageInfo = $("pageInfo");
 
+/* IMPORT */
 const importFile = $("importFile");
 const btnImport = $("btnImport");
 const importStatus = $("importStatus");
 const importLog = $("importLog");
 
-const infoEl = $("info") || { textContent: "" };
+const infoEl = $("info");
 
-/* Modals */
+/* EDIT MODAL */
 const editModal = $("editModal");
 const editName = $("editName");
 const editOwner = $("editOwner");
@@ -89,124 +82,187 @@ const editDescription = $("editDescription");
 const editSave = $("editSave");
 const editCancel = $("editCancel");
 
+/* DELETE MODAL */
 const deleteModal = $("deleteModal");
 const deleteConfirm = $("deleteConfirm");
 const deleteCancel = $("deleteCancel");
 
+/* PREMIUM MODAL */
 const premiumModal = $("premiumModal");
 const premiumStart = $("premiumStart");
 const premiumEnd = $("premiumEnd");
 const premiumSave = $("premiumSave");
 const premiumCancel = $("premiumCancel");
 
+/* DROPDOWN ELEMENTS (CUSTOM CATEGORY DROPDOWN) */
+const categoryDropdown = $("categoryDropdown");
+const categorySelected = $("categorySelected");
+const categoryMenu = $("categoryMenu");
+const categorySearchInput = $("categorySearchInput");
+const categoryOptions = $("categoryOptions");
+
+/* ============================================================
+   STATE
+============================================================ */
 let categories = [];
 let lastRows = [];
-let currentCategory = null;
+let currentCategory = null;     // null = All categories
 let selectedIds = new Set();
 let editingId = null;
 let deletingId = null;
 let premiumForId = null;
 
-/* pagination state */
+/* PAGINATION */
 let currentPage = 1;
 let totalPages = 1;
-const pageSize = 10;
+const pageSize = 10; // 10 items per page
+
+/* ============================================================
+   UTILS
+============================================================ */
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
+  );
+}
 
 /* ============================================================
    LOAD CATEGORIES
 ============================================================ */
 async function loadCategories() {
-  try {
-    const res = await fetch("/categories");
-    categories = await res.json();
+  const res = await fetch("/categories");
+  categories = await res.json();
 
+  // Sidebar categories
+  if (catsDiv) {
     catsDiv.innerHTML = "";
-    categoryFilter.innerHTML = `<option value="">All categories</option>`;
-    editCategory.innerHTML = `<option value="">No category</option>`;
-
     categories.forEach(c => {
-      // sidebar item
       const div = document.createElement("div");
       div.className = "cat";
       div.textContent = c.name;
+
       div.onclick = () => {
         currentCategory = currentCategory === c.id ? null : c.id;
-        syncCategoryUI();
         currentPage = 1;
+        syncCategoryUI();
         refresh();
       };
+
       catsDiv.appendChild(div);
-
-      // top filter
-      const opt1 = document.createElement("option");
-      opt1.value = c.id;
-      opt1.textContent = c.name;
-      categoryFilter.appendChild(opt1);
-
-      // edit modal category
-      const opt2 = document.createElement("option");
-      opt2.value = c.id;
-      opt2.textContent = c.name;
-      editCategory.appendChild(opt2);
     });
-
-    syncCategoryUI();
-  } catch (err) {
-    console.error("Failed to load categories", err);
   }
+
+  // Edit modal dropdown
+  if (editCategory) {
+    editCategory.innerHTML = `<option value="">Select category</option>`;
+    categories.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.name;
+      editCategory.appendChild(opt);
+    });
+  }
+
+  // Custom dropdown options
+  setupCategoryDropdownOptions();
+
+  syncCategoryUI();
 }
 
-function syncCategoryUI() {
-  // sidebar highlight
-  Array.from(catsDiv.children).forEach((node, idx) => {
-    const c = categories[idx];
-    node.classList.toggle("active", c && c.id === currentCategory);
-  });
-  // top dropdown
-  if (categoryFilter) {
-    categoryFilter.value = currentCategory ? String(currentCategory) : "";
-  }
+/* ============================================================
+   SIDEBAR CATEGORY SEARCH
+============================================================ */
+if (catSearch) {
+  catSearch.oninput = () => {
+    const q = catSearch.value.toLowerCase().trim();
+    Array.from(catsDiv.children).forEach(div => {
+      const name = div.textContent.toLowerCase();
+      div.style.display = name.includes(q) ? "block" : "none";
+    });
+  };
 }
 
-/* category dropdown change */
-if (categoryFilter) {
-  categoryFilter.onchange = () => {
-    const val = categoryFilter.value;
-    currentCategory = val ? Number(val) : null;
+/* ============================================================
+   CUSTOM CATEGORY DROPDOWN (TOP BAR)
+============================================================ */
+function setupCategoryDropdownOptions(filterText = "") {
+  if (!categoryOptions) return;
+
+  const q = filterText.toLowerCase().trim();
+  categoryOptions.innerHTML = "";
+
+  // "All categories" option
+  const allDiv = document.createElement("div");
+  allDiv.className = "dropdown-option";
+  allDiv.textContent = "All categories";
+  allDiv.onclick = () => {
+    currentCategory = null;
     currentPage = 1;
     syncCategoryUI();
+    if (categoryMenu) categoryMenu.classList.add("hidden");
     refresh();
   };
+  categoryOptions.appendChild(allDiv);
+
+  // Category options
+  categories.forEach(c => {
+    if (q && !c.name.toLowerCase().includes(q)) return;
+
+    const opt = document.createElement("div");
+    opt.className = "dropdown-option";
+    opt.textContent = c.name;
+    opt.dataset.id = c.id;
+
+    opt.onclick = () => {
+      currentCategory = c.id;
+      currentPage = 1;
+      syncCategoryUI();
+      if (categoryMenu) categoryMenu.classList.add("hidden");
+      refresh();
+    };
+
+    categoryOptions.appendChild(opt);
+  });
 }
 
-/* ============================================================
-   LOGOUT
-============================================================ */
-if (btnLogout) {
-  btnLogout.onclick = () => {
-    setToken(null);
-    window.location.href = "/admin.html";
+// Dropdown interactions
+if (categorySelected && categoryMenu && categoryDropdown) {
+  categorySelected.onclick = () => {
+    categoryMenu.classList.toggle("hidden");
+  };
+
+  document.addEventListener("click", e => {
+    if (!categoryDropdown.contains(e.target)) {
+      categoryMenu.classList.add("hidden");
+    }
+  });
+}
+
+if (categorySearchInput) {
+  categorySearchInput.oninput = () => {
+    setupCategoryDropdownOptions(categorySearchInput.value);
   };
 }
 
-/* ============================================================
-   PAGINATION BUTTONS (safe)
-============================================================ */
-if (btnPrevPage) {
-  btnPrevPage.onclick = () => {
-    if (currentPage > 1) {
-      currentPage--;
-      refresh();
+/* Keep sidebar + dropdown label in sync */
+function syncCategoryUI() {
+  // Sidebar highlights
+  if (catsDiv) {
+    Array.from(catsDiv.children).forEach((node, i) => {
+      const c = categories[i];
+      node.classList.toggle("active", c && c.id === currentCategory);
+    });
+  }
+
+  // Dropdown label text
+  if (categorySelected) {
+    if (!currentCategory) {
+      categorySelected.textContent = "All categories";
+    } else {
+      const c = categories.find(cat => cat.id === currentCategory);
+      categorySelected.textContent = c ? c.name : "All categories";
     }
-  };
-}
-if (btnNextPage) {
-  btnNextPage.onclick = () => {
-    if (currentPage < totalPages) {
-      currentPage++;
-      refresh();
-    }
-  };
+  }
 }
 
 /* ============================================================
@@ -226,11 +282,12 @@ async function refresh() {
   selectedIds.clear();
 
   const params = [];
-  if (currentCategory) params.push(`categoryId=${encodeURIComponent(currentCategory)}`);
+  if (currentCategory) params.push(`categoryId=${currentCategory}`);
   params.push(`page=${currentPage}`);
   params.push(`limit=${pageSize}`);
 
   const query = "?" + params.join("&");
+
   const data = await api("/admin/companies" + query);
   if (!data || !Array.isArray(data.rows)) {
     listEl.innerHTML = "<div class='small'>Error loading companies.</div>";
@@ -238,40 +295,41 @@ async function refresh() {
   }
 
   lastRows = data.rows;
-  const total = data.total || data.rows.length;
+  const total = data.total || 0;
   totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (currentPage > totalPages) currentPage = totalPages;
 
-  if (pageInfo) {
-    pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
-  }
+  // Update pagination UI
+  if (pageInfo) pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
   if (btnPrevPage) btnPrevPage.disabled = currentPage <= 1;
   if (btnNextPage) btnNextPage.disabled = currentPage >= totalPages;
 
-  const text = filterText ? filterText.value.trim().toLowerCase() : "";
-  const filtered = text
-    ? lastRows.filter(r => (r.businessName || "").toLowerCase().includes(text))
+  // Filter inside current page by company name text
+  const t = (filterText?.value || "").toLowerCase().trim();
+  const rows = t
+    ? lastRows.filter(r => (r.businessName || "").toLowerCase().includes(t))
     : lastRows;
 
-  if (!filtered.length) {
+  if (!rows.length) {
     listEl.innerHTML = "<div class='small'>No companies found.</div>";
     return;
   }
 
-  listEl.innerHTML = filtered.map(renderItem).join("");
+  listEl.innerHTML = rows.map(renderItem).join("");
 
+  // Attach row events
   listEl.querySelectorAll(".item").forEach(el => {
     const id = el.dataset.id;
-    const btnE = el.querySelector("[data-edit]");
-    const btnD = el.querySelector("[data-del]");
-    const btnP = el.querySelector("[data-premium]");
-    const chk = el.querySelector(".row-check");
+    const editBtn = el.querySelector("[data-edit]");
+    const delBtn = el.querySelector("[data-del]");
+    const premBtn = el.querySelector("[data-premium]");
+    const check = el.querySelector(".row-check");
 
-    if (btnE) btnE.onclick = () => openEdit(id);
-    if (btnD) btnD.onclick = () => openDelete(id);
-    if (btnP) btnP.onclick = () => openPremium(id);
-    if (chk) {
-      chk.onchange = e => {
+    if (editBtn) editBtn.onclick = () => openEdit(id);
+    if (delBtn) delBtn.onclick = () => openDelete(id);
+    if (premBtn) premBtn.onclick = () => openPremium(id);
+    if (check) {
+      check.onchange = e => {
         if (e.target.checked) selectedIds.add(id);
         else selectedIds.delete(id);
       };
@@ -279,49 +337,78 @@ async function refresh() {
   });
 }
 
+/* ============================================================
+   RENDER ITEM
+============================================================ */
 function renderItem(it) {
-  const cat =
-    categories.find(c => c.id === it.category_id)?.name ||
-    it.category ||
-    "Unknown";
+  const catName =
+    categories.find(c => c.id === it.category_id)?.name || "Unknown";
 
   return `
     <div class="item ${it.is_premium ? "premium" : ""}" data-id="${it.id}">
       <div>
         <div class="title">${escapeHtml(it.businessName)}</div>
-        <div class="meta">${escapeHtml(it.ownerName || "")} • ${escapeHtml(cat)}</div>
+        <div class="meta">${escapeHtml(it.ownerName || "")} • ${escapeHtml(catName)}</div>
         <div class="meta">${escapeHtml(it.description || "")}</div>
       </div>
 
       <div class="right">
         <input type="checkbox" class="row-check" />
+
         ${it.is_premium ? `<div class="badge-premium">★ Premium</div>` : ""}
 
         <div class="meta contact">
-          ${escapeHtml(it.contactNumber || "")}
-          ${
-            it.contactNumber
-              ? `<a href="https://wa.me/${encodeURIComponent(it.contactNumber)}" target="_blank" rel="noopener noreferrer">${wpIcon}</a>`
-              : ""
-          }
-        </div>
+            ${escapeHtml(it.contactNumber || "")}
+            ${
+              it.contactNumber
+                ? `<a href="https://wa.me/${encodeURIComponent(it.contactNumber)}"
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      class="wa-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                          viewBox="0 0 24 24" fill="#25D366">
+                          <path d="M20.52 3.48A11.76 11.76 0 0 0 12 0C5.37 0 .27 5.1.27 11.73a11.66 11.66 0 0 0 1.59 5.88L0 24l6.62-1.73a11.73 11.73 0 0 0 5.38 1.33h.01c6.63 0 11.73-5.1 11.73-11.73a11.67 11.67 0 0 0-3.22-8.39zM12 21.5c-1.71 0-3.38-.45-4.84-1.31l-.35-.2-3.93 1.03 1.05-3.83-.23-.39A9.83 9.83 0 0 1 2.17 11.7C2.17 6.38 6.68 1.88 12 1.88c2.61 0 5.07 1.02 6.92 2.87A9.74 9.74 0 0 1 21.83 11.7c0 5.32-4.51 9.8-9.83 9.8zm5.12-7.39c-.28-.14-1.65-.82-1.9-.91-.25-.09-.43-.14-.61.14-.18.27-.7.91-.86 1.1-.16.18-.32.2-.6.07a8.43 8.43 0 0 1-2.47-1.53 9.38 9.38 0 0 1-1.76-2.19c-.18-.32-.02-.49.13-.64.14-.14.32-.37.48-.55.16-.18.21-.32.32-.54.11-.23.07-.41-.04-.55-.11-.14-.61-1.47-.83-2.01-.22-.54-.46-.47-.61-.48-.16-.01-.34-.01-.52-.01-.18 0-.48.07-.73.34-.25.27-.97.95-.97 2.32 0 1.37.99 2.69 1.13 2.88.14.18 1.94 3.06 4.77 4.29.66.28 1.18.45 1.58.58.66.21 1.25.18 1.72.11.53-.08 1.65-.67 1.88-1.32.23-.64.23-1.19.16-1.32-.07-.13-.25-.2-.53-.34z"/>
+                      </svg>
+                  </a>`
+                : ""
+            }
+          </div>
 
         <div class="controls">
           <button data-edit class="ghost">Edit</button>
           <button data-del class="ghost">Delete</button>
-          <button data-premium class="ghost">${
-            it.is_premium ? "Change Premium" : "Set Premium"
-          }</button>
+          <button data-premium class="ghost">
+            ${it.is_premium ? "Change Premium" : "Set Premium"}
+          </button>
         </div>
       </div>
     </div>
   `;
 }
 
-function escapeHtml(s) {
-  return String(s || "").replace(/[&<>"']/g, c =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])
-  );
+/* ============================================================
+   PAGINATION BUTTONS
+============================================================ */
+if (btnPrevPage) {
+  btnPrevPage.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      refresh();
+    }
+  };
+}
+
+if (btnNextPage) {
+  btnNextPage.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      refresh();
+    }
+  };
+}
+
+if (btnGoTop) {
+  btnGoTop.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 /* ============================================================
@@ -329,11 +416,8 @@ function escapeHtml(s) {
 ============================================================ */
 function openEdit(id) {
   editingId = id;
-
   const it = lastRows.find(r => String(r.id) === String(id));
-  if (!it) return;
-
-  if (!editModal) return;
+  if (!it || !editModal) return;
 
   editName.value = it.businessName || "";
   editOwner.value = it.ownerName || "";
@@ -349,7 +433,7 @@ function openEdit(id) {
   editModal.classList.remove("hidden");
 }
 
-if (editCancel) {
+if (editCancel && editModal) {
   editCancel.onclick = () => editModal.classList.add("hidden");
 }
 
@@ -371,7 +455,7 @@ if (editSave) {
       }
     });
 
-    editModal.classList.add("hidden");
+    if (editModal) editModal.classList.add("hidden");
     refresh();
   };
 }
@@ -384,14 +468,14 @@ function openDelete(id) {
   if (deleteModal) deleteModal.classList.remove("hidden");
 }
 
-if (deleteCancel) {
+if (deleteCancel && deleteModal) {
   deleteCancel.onclick = () => deleteModal.classList.add("hidden");
 }
 
 if (deleteConfirm) {
   deleteConfirm.onclick = async () => {
     await api(`/admin/companies/${deletingId}`, { method: "DELETE" });
-    deleteModal.classList.add("hidden");
+    if (deleteModal) deleteModal.classList.add("hidden");
     refresh();
   };
 }
@@ -403,12 +487,12 @@ function openPremium(id) {
   premiumForId = id;
   if (!premiumModal) return;
 
-  premiumStart.value = new Date().toISOString().slice(0, 10);
-  premiumEnd.value = "";
+  if (premiumStart) premiumStart.value = new Date().toISOString().slice(0, 10);
+  if (premiumEnd) premiumEnd.value = "";
   premiumModal.classList.remove("hidden");
 }
 
-if (premiumCancel) {
+if (premiumCancel && premiumModal) {
   premiumCancel.onclick = () => premiumModal.classList.add("hidden");
 }
 
@@ -422,7 +506,7 @@ if (premiumSave) {
       }
     });
 
-    premiumModal.classList.add("hidden");
+    if (premiumModal) premiumModal.classList.add("hidden");
     refresh();
   };
 }
@@ -432,17 +516,16 @@ if (premiumSave) {
 ============================================================ */
 if (btnImport) {
   btnImport.onclick = async () => {
-    const file = importFile.files[0];
-
+    const file = importFile?.files?.[0];
     if (!file) {
-      importStatus.textContent = "No file selected.";
+      if (importStatus) importStatus.textContent = "No file selected.";
       return;
     }
 
     const fd = new FormData();
     fd.append("file", file);
 
-    importStatus.textContent = "Uploading…";
+    if (importStatus) importStatus.textContent = "Uploading…";
 
     const res = await fetch("/admin/import", {
       method: "POST",
@@ -450,16 +533,20 @@ if (btnImport) {
       body: fd
     });
 
-    const txt = await res.text();
+    const text = await res.text();
     let data;
     try {
-      data = JSON.parse(txt);
+      data = JSON.parse(text);
     } catch {
-      data = txt;
+      data = text;
     }
 
-    importStatus.textContent = res.ok ? "Import successful!" : "Import failed!";
-    importLog.textContent = JSON.stringify(data, null, 2);
+    if (importStatus)
+      importStatus.textContent = res.ok ? "Import successful!" : "Import failed!";
+    if (importLog)
+      importLog.textContent = typeof data === "string"
+        ? data
+        : JSON.stringify(data, null, 2);
 
     if (res.ok) {
       await loadCategories();
@@ -474,7 +561,6 @@ if (btnImport) {
 if (btnExport) {
   btnExport.onclick = async () => {
     const cat = currentCategory ? `&categoryId=${currentCategory}` : "";
-
     const res = await fetch(`/admin/export?format=xlsx${cat}`, {
       headers: { Authorization: "Bearer " + getToken() }
     });
@@ -486,7 +572,6 @@ if (btnExport) {
 
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-
     const a = document.createElement("a");
     a.href = url;
     a.download = "companies.xlsx";
@@ -500,7 +585,6 @@ if (btnExport) {
 if (btnListAdmins) {
   btnListAdmins.onclick = async () => {
     const list = await api("/admin/notifications");
-
     if (!list?.length) {
       alert("No notifications.");
       return;
@@ -508,7 +592,7 @@ if (btnListAdmins) {
 
     alert(
       list
-        .slice(0, 20)
+        .slice(0, 30)
         .map(n => `${n.created_at} — ${n.type}: ${n.message}`)
         .join("\n\n")
     );
@@ -538,9 +622,15 @@ if (btnDeleteSelected) {
   };
 }
 
-btnGoTop.onclick = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-};
+/* ============================================================
+   LOGOUT
+============================================================ */
+if (btnLogout) {
+  btnLogout.onclick = () => {
+    setToken(null);
+    window.location.href = "/admin.html";
+  };
+}
 
 /* ============================================================
    INIT
@@ -551,7 +641,7 @@ btnGoTop.onclick = () => {
     return;
   }
 
-  infoEl.textContent = "Logged in";
+  if (infoEl) infoEl.textContent = "Logged in";
 
   await loadCategories();
   refresh();
