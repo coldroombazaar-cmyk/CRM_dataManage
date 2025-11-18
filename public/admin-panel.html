@@ -39,9 +39,10 @@
     </div>
 
     <div class="card">
-      <button id="sidebarExport" class="btn full ghost">Export XLSX</button>
-      <button id="sidebarNotify" class="btn full ghost">Notifications</button>
-      <button id="sidebarDelete" class="btn full danger">Delete Selected</button>
+      <button id="btnExport" class="btn full ghost">Export XLSX</button>
+      <button id="btnListAdmins" class="btn full ghost">Notifications</button>
+      <button id="btnDeleteSelected" class="btn full danger">Delete Selected</button>
+      <button id="btnLogout" class="btn full danger">Logout</button>
     </div>
 
   </div>
@@ -51,17 +52,23 @@
 
     <div class="toolbar">
       <input type="text" id="filterText" placeholder="Search companies..." class="search-input">
-
       <select id="categoryFilter" class="category-filter"></select>
 
       <button id="btnRefresh" class="btn primary">Refresh</button>
-      <button id="btnExport" class="btn ghost">Export XLSX</button>
-      <button id="btnListAdmins" class="btn ghost">Notifications</button>
-      <button id="btnLogout" class="btn danger">Logout</button>
-      <button id="btnDeleteSelected" class="btn danger">Delete Selected</button>
     </div>
 
     <div id="list" class="company-list"></div>
+
+    <!-- PAGINATION BAR (INSIDE MAIN) -->
+    <div class="pagination-bar">
+        <button id="btnPrevPage" class="btn ghost small">← Prev</button>
+        <span id="pageInfo">Page 1 / 1</span>
+        <button id="btnNextPage" class="btn ghost small">Next →</button>
+
+        <button id="btnGoTop" class="btn primary small" style="margin-left:auto;">
+            Go to Top ↑
+        </button>
+    </div>
 
   </div>
 
@@ -123,22 +130,24 @@
 <script src="admin-panel.js"></script>
 
 <script>
-// THEME
-const btn = document.getElementById("themeToggle");
+// THEME HANDLER
+const themeBtn = document.getElementById("themeToggle");
+
 if (localStorage.getItem("theme") === "light") {
   document.body.classList.add("light");
-  btn.textContent = "🌙";
+  themeBtn.textContent = "🌙";
 } else {
-  btn.textContent = "☀️";
+  themeBtn.textContent = "☀️";
 }
-btn.onclick = () => {
+
+themeBtn.onclick = () => {
   document.body.classList.toggle("light");
   const mode = document.body.classList.contains("light") ? "light" : "dark";
   localStorage.setItem("theme", mode);
-  btn.textContent = mode === "light" ? "🌙" : "☀️";
+  themeBtn.textContent = mode === "light" ? "🌙" : "☀️";
 };
 
-// Redirect if not logged in
+// NOT LOGGED IN → REDIRECT TO LOGIN
 if (!localStorage.getItem("admin_token")) {
   window.location.href = "/admin.html";
 }

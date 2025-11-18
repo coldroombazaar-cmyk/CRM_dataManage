@@ -110,7 +110,7 @@ let premiumForId = null;
 /* pagination state */
 let currentPage = 1;
 let totalPages = 1;
-const pageSize = 25;
+const pageSize = 10;
 
 /* ============================================================
    LOAD CATEGORIES
@@ -537,6 +537,10 @@ if (btnDeleteSelected) {
     refresh();
   };
 }
+
+btnGoTop.onclick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+};
 
 /* ============================================================
    INIT
