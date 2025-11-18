@@ -27,6 +27,7 @@
     <h2>Add Business</h2>
 
     <form id="addForm" class="grid" enctype="multipart/form-data">
+      
       <div class="col-6">
         <label>Business Name *</label>
         <input id="businessName" name="businessName" required>
@@ -38,10 +39,15 @@
       </div>
 
       <div class="col-6">
-        <label>Category</label>
-        <select id="categorySelect" name="categoryId">
-          <option value="">— No category — (Unknown)</option>
-        </select>
+        <label>Categories</label>
+
+        <!-- visible clickable bar -->
+        <div id="multiCatSelect" class="multi-select-display">
+          Select Categories
+        </div>
+
+        <!-- hidden input for server -->
+        <input type="hidden" id="selectedCategories" name="selectedCategories">
       </div>
 
       <div class="col-6">
@@ -95,6 +101,7 @@
         <button class="ghost" type="button" id="clear">Clear</button>
         <span id="msg"></span>
       </div>
+
     </form>
   </section>
 
@@ -109,7 +116,6 @@
       </select>
       <button id="searchBtn" class="primary">Search</button>
 
-      <!-- LIVE SUGGEST -->
       <div id="suggestBox" class="suggest-box"></div>
     </div>
 
@@ -118,6 +124,24 @@
 
 </div>
 
+<!-- MULTI CATEGORY POPUP -->
+<div id="categoryModal" class="cat-modal hidden">
+  <div class="cat-modal-box">
+    <h3>Select Categories</h3>
+
+    <input type="text" id="catSearchPopup" placeholder="Search..." class="popup-search">
+
+    <div id="catCheckboxList" class="checkbox-list"></div>
+
+    <div class="modal-actions">
+      <button id="catCancel" class="ghost">Cancel</button>
+      <button id="catApply" class="primary">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORTANT: JS AT BOTTOM -->
 <script src="index.js"></script>
+
 </body>
 </html>

@@ -1,36 +1,112 @@
 const $ = id => document.getElementById(id);
 
+/* FORM ELEMENTS */
 const addForm = $("addForm");
 const imagesInput = $("images");
 const preview = $("preview");
 const msg = $("msg");
 
-const categorySelect = $("categorySelect");
+/* SEARCH ELEMENTS */
 const searchCategory = $("searchCategory");
 const searchBox = $("searchBox");
 const searchBtn = $("searchBtn");
 const results = $("results");
 const suggestBox = $("suggestBox");
 
-/* ===============================================
-   Load Categories
-=============================================== */
+/* MULTI-CATEGORY POPUP ELEMENTS */
+const multiCatSelect = $("multiCatSelect");
+const categoryModal = $("categoryModal");
+const catSearchPopup = $("catSearchPopup");
+const catCheckboxList = $("catCheckboxList");
+const catCancel = $("catCancel");
+const catApply = $("catApply");
+const hiddenSelected = $("selectedCategories");
+
+/* =====================================
+   GLOBAL STATE
+===================================== */
+let allCategories = [];
+let selectedCategoryIds = [];
+
+/* =====================================
+   LOAD CATEGORIES
+===================================== */
 async function loadCategories() {
-  const r = await fetch("/categories");
-  const cats = await r.json();
+  const res = await fetch("/categories");
+  allCategories = await res.json();
 
-  categorySelect.innerHTML = `<option value="">— No category — (Unknown)</option>`;
+  // Search dropdown
   searchCategory.innerHTML = `<option value="">All</option>`;
-
-  cats.forEach(c => {
-    categorySelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  allCategories.forEach(c => {
     searchCategory.innerHTML += `<option value="${c.id}">${c.name}</option>`;
   });
+
+  // Render checkboxes in popup
+  renderCategoryCheckboxes();
 }
 
-/* ===============================================
-   Image Preview
-=============================================== */
+/* =====================================
+   RENDER CHECKBOX POPUP
+===================================== */
+function renderCategoryCheckboxes(filter = "") {
+  catCheckboxList.innerHTML = "";
+
+  allCategories
+    .filter(c => c.name.toLowerCase().includes(filter.toLowerCase()))
+    .forEach(c => {
+      const checked = selectedCategoryIds.includes(c.id) ? "checked" : "";
+      catCheckboxList.innerHTML += `
+        <label>
+          <input type="checkbox" value="${c.id}" ${checked}>
+          ${c.name}
+        </label>
+      `;
+    });
+}
+
+/* =====================================
+   OPEN POPUP
+===================================== */
+multiCatSelect.onclick = () => {
+  categoryModal.classList.remove("hidden");
+};
+
+/* =====================================
+   CLOSE POPUP
+===================================== */
+catCancel.onclick = () => {
+  categoryModal.classList.add("hidden");
+};
+
+/* =====================================
+   APPLY SELECTED CATEGORIES
+===================================== */
+catApply.onclick = () => {
+  const checks = Array.from(catCheckboxList.querySelectorAll("input:checked"));
+  selectedCategoryIds = checks.map(c => Number(c.value));
+
+  // Show selected names
+  const names = allCategories
+    .filter(c => selectedCategoryIds.includes(c.id))
+    .map(c => c.name)
+    .join(", ");
+
+  multiCatSelect.textContent = names || "Select Categories";
+  hiddenSelected.value = JSON.stringify(selectedCategoryIds);
+
+  categoryModal.classList.add("hidden");
+};
+
+/* =====================================
+   POPUP SEARCH
+===================================== */
+catSearchPopup.oninput = e => {
+  renderCategoryCheckboxes(e.target.value);
+};
+
+/* =====================================
+   IMAGE PREVIEW
+===================================== */
 imagesInput.onchange = () => {
   preview.innerHTML = "";
   [...imagesInput.files].forEach(f => {
@@ -40,29 +116,29 @@ imagesInput.onchange = () => {
   });
 };
 
-/* ===============================================
-   ADD BUSINESS
-=============================================== */
+/* =====================================
+   ADD BUSINESS (WITH MULTI CATEGORY)
+===================================== */
 addForm.onsubmit = async e => {
   e.preventDefault();
-
   msg.textContent = "Saving...";
 
   const fd = new FormData(addForm);
+  fd.append("categoryIds", JSON.stringify(selectedCategoryIds));
 
-  const catId = fd.get("categoryId");
-  if (catId) {
-    const selected = categorySelect.selectedOptions[0]?.textContent;
-    fd.append("category", selected);
-  }
+  const res = await fetch("/api/companies", {
+    method: "POST",
+    body: fd
+  });
 
-  const r = await fetch("/api/companies", { method: "POST", body: fd });
-  const data = await r.json();
+  const data = await res.json();
 
   if (data.success) {
     msg.textContent = "Added!";
     addForm.reset();
     preview.innerHTML = "";
+    selectedCategoryIds = [];
+    multiCatSelect.textContent = "Select Categories";
   } else {
     msg.textContent = data.error || "Failed";
   }
@@ -70,23 +146,20 @@ addForm.onsubmit = async e => {
   setTimeout(() => (msg.textContent = ""), 2000);
 };
 
+/* =====================================
+   CLEAR FORM
+===================================== */
 $("clear").onclick = () => {
   addForm.reset();
   preview.innerHTML = "";
+  selectedCategoryIds = [];
+  multiCatSelect.textContent = "Select Categories";
 };
 
-/* ===============================================
-   LIVE SUGGEST — REMOVED
-=============================================== */
-searchBox.oninput = () => {
-  suggestBox.style.display = "none";
-};
-
-/* ===============================================
+/* =====================================
    SEARCH
-=============================================== */
+===================================== */
 searchBtn.onclick = doSearch;
-
 searchBox.onkeydown = e => {
   if (e.key === "Enter") {
     e.preventDefault();
@@ -98,7 +171,6 @@ async function doSearch() {
   const q = searchBox.value.trim();
   const cat = searchCategory.value;
 
-  // 🔥 Prevent showing full list when typing 1 character
   if (q.length < 2 && !cat) {
     results.textContent = "Type at least 2 letters to search.";
     return;
@@ -120,7 +192,7 @@ async function doSearch() {
   results.innerHTML = list.map(render).join("");
 }
 
-
+/* RESULT CARD */
 function render(it) {
   return `
     <div class="result-card">
@@ -138,9 +210,9 @@ function render(it) {
   `;
 }
 
-/* ===============================================
+/* =====================================
    DARK MODE
-=============================================== */
+===================================== */
 const html = document.documentElement;
 const toggle = $("toggleTheme");
 
