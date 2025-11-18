@@ -28,7 +28,7 @@ body.light {
   --muted: #666;
   --primary: #007bff;
   --border: #c8c8c8;
-  --modal-bg: rgba(255,255,255,0.9);
+  --modal-bg: rgba(255,255,255,0.95);
 }
 
 /* BODY */
@@ -36,14 +36,14 @@ body {
   background: var(--bg);
   color: var(--text);
   padding: 24px;
-  transition: 0.3s ease;
+  transition: background 0.3s ease;
 }
 
 /* THEME BUTTON */
 .theme-btn {
   position: fixed;
-  top: 12px;
-  right: 12px;
+  top: 14px;
+  right: 14px;
   background: var(--card);
   border: 1px solid var(--border);
   padding: 6px 12px;
@@ -57,12 +57,13 @@ body {
 
 .theme-btn:hover { opacity: 0.85; }
 
-/* LAYOUT */
+/* MAIN WRAP */
 .app {
-  max-width: 1400px;
+  max-width: 1420px;
   margin: auto;
 }
 
+/* HEADER */
 .header {
   display: flex;
   justify-content: space-between;
@@ -73,7 +74,7 @@ body {
 .header h1 { font-size: 32px; font-weight: 600; }
 .sub { color: var(--muted); }
 
-/* MAIN LAYOUT */
+/* LAYOUT */
 .layout {
   display: flex;
   gap: 40px;
@@ -82,7 +83,7 @@ body {
 
 /* SIDEBAR */
 .sidebar {
-  width: 350px;
+  width: 320px;
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -101,20 +102,18 @@ body {
   background: var(--card-hover);
 }
 
-/* CATEGORY BLOCK */
+/* CATEGORY */
 .cat {
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: rgba(255,255,255,0.05);
   border-radius: var(--radius);
   margin-bottom: 8px;
   cursor: pointer;
   transition: 0.2s ease;
+  font-size: 15px;
 }
 
-.cat:hover {
-  background: rgba(255,255,255,0.15);
-}
-
+.cat:hover { background: rgba(255,255,255,0.15); }
 .cat.active {
   background: var(--primary);
   color: white;
@@ -132,7 +131,7 @@ body {
 
 /* BUTTONS */
 .btn {
-  padding: 10px 16px;
+  padding: 10px 14px;
   border-radius: var(--radius);
   cursor: pointer;
   border: none;
@@ -149,9 +148,7 @@ body {
 .btn:hover { opacity: 0.85; }
 
 /* MAIN CONTENT */
-.main {
-  flex: 1;
-}
+.main { flex: 1; }
 
 .toolbar {
   display: flex;
@@ -167,6 +164,7 @@ body {
   border: 1px solid var(--border);
   background: var(--card);
   color: var(--text);
+  font-size: 14px;
 }
 
 .search-input::placeholder {
@@ -175,31 +173,47 @@ body {
 
 .company-list { margin-top: 12px; }
 
-/* COMPANY ITEM */
+/* COMPANY ROW */
 .item {
   background: var(--card);
   border: 1px solid var(--border);
-  padding: 16px;
+  padding: 18px;
   border-radius: var(--radius);
   margin-bottom: 16px;
   display: flex;
   justify-content: space-between;
-  transition: 0.2s ease;
+  transition: 0.25s ease;
 }
 
-.item:hover { background: var(--card-hover); transform: translateY(-2px); }
+.item:hover {
+  background: var(--card-hover);
+  transform: translateY(-2px);
+}
 
-.item.premium { border-left: 4px solid gold; }
+.item.premium {
+  border-left: 4px solid gold;
+}
+
+.title {
+  font-size: 18px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
 
 .meta {
   color: var(--muted);
   font-size: 13px;
 }
 
+/* CONTACT BOX */
 .contact {
   display: flex;
   gap: 6px;
   align-items: center;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background-color: rgba(0,0,0,0.3);
+  margin: 10px 0;
 }
 
 .wp-icon {
@@ -208,7 +222,6 @@ body {
   opacity: 0.85;
   transition: 0.2s ease;
 }
-
 .wp-icon:hover {
   opacity: 1;
   transform: scale(1.15);
@@ -221,7 +234,7 @@ body {
   font-size: 12px;
 }
 
-/* =============== MODAL =============== */
+/* ================ MODAL ================ */
 .modal {
   position: fixed;
   inset: 0;
@@ -247,13 +260,13 @@ body {
   animation: pop 0.2s ease;
 }
 
-/* Modal animation */
+/* POP ANIMATION */
 @keyframes pop {
   from { transform: scale(0.92); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
 
-/* 2-Column Form Grid */
+/* 2-COLUMN GRID */
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -274,6 +287,7 @@ body {
   border-radius: var(--radius);
   background: var(--card);
   color: var(--text);
+  font-size: 14px;
 }
 
 textarea {
@@ -285,4 +299,22 @@ textarea {
   margin-top: 20px;
   display: flex;
   justify-content: space-between;
+}
+
+/* PAGER */
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-info {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* disable state look */
+.btn[disabled] {
+  opacity: 0.35;
+  cursor: default;
 }

@@ -1,6 +1,7 @@
 /**************************************************************************
  * CLEAN, FORMATTED, FULLY-FIXED server.js
  * CSV + XLSX Auto Import + Category optional + unknown fallback
+ * + Admin list pagination
  **************************************************************************/
 
 const express = require("express");
@@ -112,42 +113,42 @@ app.post("/api/companies", upload.array("images", 10), (req, res) => {
 
     /* ------------ Insert ------------ */
     const stmt = db.prepare(`
-  INSERT INTO companies (
-    businessName, ownerName, officeAddress, businessAddress,
-    gstNo, category, state, contactNumber,
-    whatsappNumber, email, website, capacity,
-    description, uploaderMobile, images,
-    is_premium, premium_start, premium_end,
-    created_at, updated_at, category_id
-  )
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-`);
+      INSERT INTO companies (
+        businessName, ownerName, officeAddress, businessAddress,
+        gstNo, category, state, contactNumber,
+        whatsappNumber, email, website, capacity,
+        description, uploaderMobile, images,
+        is_premium, premium_start, premium_end,
+        created_at, updated_at, category_id
+      )
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `);
 
+    const now = new Date().toISOString();
 
     const info = stmt.run(
-  b.businessName,
-  b.ownerName || "",
-  b.officeAddress || "",
-  b.businessAddress || "",
-  b.gstNo || "",
-  b.category || "",
-  b.state || "",
-  b.contactNumber || "",
-  b.whatsappNumber || "",
-  b.email || "",
-  b.website || "",
-  b.capacity || "",
-  b.description || "",
-  b.uploaderMobile || "",
-  imagesJson,
-  0,            // is_premium
-  null,         // premium_start
-  null,         // premium_end
-  new Date().toISOString(), // created_at
-  new Date().toISOString(), // updated_at
-  categoryId
-);
-
+      b.businessName,
+      b.ownerName || "",
+      b.officeAddress || "",
+      b.businessAddress || "",
+      b.gstNo || "",
+      b.category || "",
+      b.state || "",
+      b.contactNumber || "",
+      b.whatsappNumber || "",
+      b.email || "",
+      b.website || "",
+      b.capacity || "",
+      b.description || "",
+      b.uploaderMobile || "",
+      imagesJson,
+      0, // is_premium
+      null, // premium_start
+      null, // premium_end
+      now, // created_at
+      now, // updated_at
+      categoryId
+    );
 
     res.json({ success: true, id: info.lastInsertRowid });
   } catch (err) {
@@ -205,31 +206,46 @@ app.post("/admin/login", async (req, res) => {
 });
 
 /* =====================================================
-   ADMIN: LIST COMPANIES (Filter by categoryId)
+   ADMIN: LIST COMPANIES (Filter + Pagination)
 ===================================================== */
 app.get("/admin/companies", requireAdmin, (req, res) => {
   try {
-    const categoryId = req.query.categoryId
-      ? Number(req.query.categoryId)
-      : null;
+    const categoryId = req.query.categoryId ? Number(req.query.categoryId) : null;
 
-    let rows = [];
+    // pagination
+    const page = req.query.page ? Math.max(parseInt(req.query.page, 10) || 1, 1) : 1;
+    const pageSize = req.query.limit
+      ? Math.min(Math.max(parseInt(req.query.limit, 10) || 25, 1), 100)
+      : 25;
+    const offset = (page - 1) * pageSize;
+
+    let where = "";
+    const params = [];
 
     if (categoryId) {
-      rows = db
-        .prepare(
-          "SELECT * FROM companies WHERE category_id = ? ORDER BY is_premium DESC, premium_end ASC"
-        )
-        .all(categoryId);
-    } else {
-      rows = db
-        .prepare(
-          "SELECT * FROM companies ORDER BY is_premium DESC, premium_end ASC"
-        )
-        .all();
+      where = "WHERE category_id = ?";
+      params.push(categoryId);
     }
 
-    res.json(rows.map(normalizeCompanyRow));
+    const totalRow = db
+      .prepare(`SELECT COUNT(*) AS cnt FROM companies ${where}`)
+      .get(...params);
+
+    const rows = db
+      .prepare(
+        `SELECT * FROM companies
+         ${where}
+         ORDER BY is_premium DESC, premium_end ASC, id DESC
+         LIMIT ? OFFSET ?`
+      )
+      .all(...params, pageSize, offset);
+
+    res.json({
+      rows: rows.map(normalizeCompanyRow),
+      total: totalRow.cnt || 0,
+      page,
+      pageSize
+    });
   } catch (err) {
     console.error("Admin list companies error:", err && err.stack ? err.stack : err);
     res.status(500).json({ error: "Server error" });
@@ -484,7 +500,7 @@ app.get("/admin/export", requireAdmin, async (req, res) => {
 });
 
 /* =====================================================
-   IMPORT (Auto detect CSV + XLSX) - improved & safe
+   IMPORT (Auto detect CSV + XLSX)
 ===================================================== */
 app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) => {
   try {
@@ -499,13 +515,13 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
     // helper to get/create category id
     const getCategoryIdForName = (name) => {
       if (!name) return getOrCreateUnknownCategory();
-      const found = db.prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER(?)").get(name.trim());
+      const found = db
+        .prepare("SELECT id FROM categories WHERE LOWER(name)=LOWER(?)")
+        .get(name.trim());
       return found ? found.id : getOrCreateUnknownCategory();
     };
 
-    /* -------------------------------------------------
-       CASE 1: CSV IMPORT (naive split)
-    ------------------------------------------------- */
+    /* ------------- CASE 1: CSV IMPORT ------------- */
     if (ext === ".csv") {
       const raw = fs.readFileSync(filePath, "utf8");
       const lines = raw.split(/\r?\n/).filter(x => x.trim() !== "");
@@ -533,9 +549,7 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
       }
     }
 
-    /* -------------------------------------------------
-       CASE 2: XLSX IMPORT
-    ------------------------------------------------- */
+    /* ------------- CASE 2: XLSX IMPORT ------------- */
     else if (ext === ".xlsx" || ext === ".xls") {
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.readFile(filePath);
@@ -552,7 +566,6 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
         headers[n] = (cell.text || "").trim();
       });
 
-      // require at least businessName and state headers
       const lowerHeaders = headers.map(h => (h || "").toLowerCase());
       if (!lowerHeaders.includes("businessname") || !lowerHeaders.includes("state")) {
         fs.unlinkSync(filePath);
@@ -569,13 +582,6 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
           if (h) obj[h] = v;
         });
 
-        if (!obj.businessName && !obj.businessname) {
-          // try lowercase header fallback
-          const bn = obj.businessname || obj.BusinessName || obj["businessName"];
-          if (!bn) return;
-        }
-
-        // normalize: prefer camel-case header if present, else lowercase
         if (!obj.businessName && obj.businessname) obj.businessName = obj.businessname;
         if (!obj.state && obj.State) obj.state = obj.State;
         if (!obj.state && obj.state === undefined && obj.STATE) obj.state = obj.STATE;
@@ -597,42 +603,39 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
       return res.status(400).json({ error: "No valid rows to import" });
     }
 
-    /* -------------------------------------------------
-   PERFORM BULK INSERT (IMPORT) - placeholders must match
-------------------------------------------------- */
-const insertStmt = db.prepare(`
-  INSERT INTO companies (
-    businessName, ownerName, category, category_id,
-    state, contactNumber, whatsappNumber, email,
-    website, gstNo, capacity, description,
-    images, created_at
-  ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-`);
+    /* ------------- BULK INSERT ------------- */
+    const insertStmt = db.prepare(`
+      INSERT INTO companies (
+        businessName, ownerName, category, category_id,
+        state, contactNumber, whatsappNumber, email,
+        website, gstNo, capacity, description,
+        images, created_at
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    `);
 
-const insertMany = db.transaction(() => {
-  rowsToInsert.forEach(r => {
-    insertStmt.run(
-      r.businessName || "",
-      r.ownerName || "",
-      r.category || "",
-      r.category_id,
-      r.state || "",
-      r.contactNumber || "",
-      r.whatsappNumber || "",
-      r.email || "",
-      r.website || "",
-      r.gstNo || "",
-      r.capacity || "",
-      r.description || "",
-      JSON.stringify([]),
-      new Date().toISOString()
-    );
-  });
-});
+    const insertMany = db.transaction(() => {
+      const now = new Date().toISOString();
+      rowsToInsert.forEach(r => {
+        insertStmt.run(
+          r.businessName || "",
+          r.ownerName || "",
+          r.category || "",
+          r.category_id,
+          r.state || "",
+          r.contactNumber || "",
+          r.whatsappNumber || "",
+          r.email || "",
+          r.website || "",
+          r.gstNo || "",
+          r.capacity || "",
+          r.description || "",
+          JSON.stringify([]),
+          now
+        );
+      });
+    });
 
-insertMany();
-
-
+    insertMany();
     fs.unlinkSync(filePath);
 
     res.json({
@@ -640,7 +643,6 @@ insertMany();
       imported: rowsToInsert.length
     });
   } catch (err) {
-    // print full stack so you can paste it if something goes wrong
     console.error("Import error:", err && err.stack ? err.stack : err);
     res.status(500).json({
       error: "Import failed",
@@ -649,6 +651,9 @@ insertMany();
   }
 });
 
+/* =====================================================
+   PUBLIC SEARCH / LIST COMPANIES (front-end)
+===================================================== */
 app.get("/api/companies", (req, res) => {
   const q = req.query.q ? req.query.q.trim() : "";
 
@@ -678,9 +683,6 @@ app.get("/api/companies", (req, res) => {
   const rows = db.prepare(sql).all(...params);
   return res.json(rows);
 });
-
-
-
 
 /* =====================================================
    START SERVER

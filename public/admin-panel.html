@@ -1,158 +1,121 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin Panel — CRM</title>
-
-  <link rel="stylesheet" href="admin-panel.css">
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<link rel="stylesheet" href="admin-panel.css">
 </head>
 
 <body>
 
-<!-- THEME TOGGLE -->
-<button id="themeToggle" class="theme-btn">🌙</button>
+<button id="themeToggle" class="theme-btn">☀️</button>
 
 <div class="app">
 
-  <!-- HEADER -->
-  <header class="header">
-    <div>
-      <h1>Admin Panel</h1>
-      <p class="sub">Manage Companies • Categories • Import • Export</p>
+<header class="header">
+  <div>
+    <h1>Admin Panel</h1>
+    <p class="sub">Manage Companies • Categories • Import • Export</p>
+  </div>
+  <div id="info" class="sub">Checking…</div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="card">
+      <h3>Categories</h3>
+      <div id="cats" style="margin-top:12px;"></div>
     </div>
-    <div id="info">Logged out</div>
-  </header>
 
-  <!-- LAYOUT -->
-  <div class="layout">
+    <div class="card">
+      <h3>Import</h3>
+      <input type="file" id="importFile">
+      <button id="btnImport" class="btn primary full">Import Now</button>
+      <div id="importStatus"></div>
+      <pre id="importLog"></pre>
+    </div>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-
-      <div class="card">
-        <div class="row-between">
-          <strong>Categories</strong>
-          <button id="btnNewCategory" class="btn ghost small">+ New</button>
-        </div>
-
-        <div id="cats"></div>
-
-        <hr>
-
-        <label>Import Excel (.xlsx/.xls)</label>
-        <div class="import-box">
-          <input id="importFile" type="file" accept=".xlsx,.xls">
-          <button id="btnImport" class="btn small">Import</button>
-        </div>
-
-        <div id="importStatus"></div>
-        <pre id="importLog"></pre>
-      </div>
-
-      <!-- ADMIN CARD -->
-      <div class="card">
-        <strong>Admin</strong>
-        <button id="btnShowLogin" class="btn primary small">Login</button>
-        <button id="btnLogout" class="btn ghost small">Logout</button>
-        <button id="btnExport" class="btn primary full">Export XLSX</button>
-      </div>
-
-    </aside>
-
-    <!-- MAIN -->
-    <main class="main">
-      <div class="card">
-
-        <div class="toolbar">
-          <input id="filterText" placeholder="Search business…" class="search-input">
-
-          <select id="categoryFilter" class="category-filter">
-            <option value="">All categories</option>
-          </select>
-
-          <button id="btnRefresh" class="btn primary">Refresh</button>
-          <button id="btnListAdmins" class="btn ghost">Admins</button>
-          <button id="btnDeleteSelected" class="btn danger">Delete Selected</button>
-        </div>
-
-        <div id="list" class="company-list"></div>
-
-      </div>
-    </main>
+    <div class="card">
+      <button id="sidebarExport" class="btn full ghost">Export XLSX</button>
+      <button id="sidebarNotify" class="btn full ghost">Notifications</button>
+      <button id="sidebarDelete" class="btn full danger">Delete Selected</button>
+    </div>
 
   </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="toolbar">
+      <input type="text" id="filterText" placeholder="Search companies..." class="search-input">
+
+      <select id="categoryFilter" class="category-filter"></select>
+
+      <button id="btnRefresh" class="btn primary">Refresh</button>
+      <button id="btnExport" class="btn ghost">Export XLSX</button>
+      <button id="btnListAdmins" class="btn ghost">Notifications</button>
+      <button id="btnLogout" class="btn danger">Logout</button>
+      <button id="btnDeleteSelected" class="btn danger">Delete Selected</button>
+    </div>
+
+    <div id="list" class="company-list"></div>
+
+  </div>
+
 </div>
 
+</div>
 
-<!-- ===================== EDIT MODAL (TWO COLUMN) ===================== -->
-<div class="modal hidden" id="editModal">
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal hidden">
   <div class="modal-box">
-
     <h3>Edit Company</h3>
 
     <div class="form-grid">
-
-      <div><label>Business Name</label><input id="editName"></div>
-      <div><label>Owner</label><input id="editOwner"></div>
-
-      <div><label>State</label><input id="editState"></div>
-      <div><label>Phone</label><input id="editPhone"></div>
-
-      <div><label>WhatsApp</label><input id="editWhatsapp"></div>
-      <div><label>Email</label><input id="editEmail"></div>
-
-      <div><label>Website</label><input id="editWebsite"></div>
-      <div><label>GST No</label><input id="editGst"></div>
-
-      <div>
-        <label>Category</label>
-        <select id="editCategory"></select>
-      </div>
-
-      <div class="full">
-        <label>Description</label>
-        <textarea id="editDescription"></textarea>
-      </div>
-
+      <input id="editName" placeholder="Business Name" class="full">
+      <input id="editOwner" placeholder="Owner Name">
+      <input id="editState" placeholder="State">
+      <input id="editPhone" placeholder="Phone">
+      <input id="editWhatsapp" placeholder="WhatsApp">
+      <input id="editEmail" placeholder="Email">
+      <input id="editWebsite" placeholder="Website">
+      <input id="editGst" placeholder="GST No" class="full">
+      <select id="editCategory" class="full"></select>
+      <textarea id="editDescription" placeholder="Description" class="full"></textarea>
     </div>
 
     <div class="modal-actions">
-      <button id="editSave" class="btn primary">Save</button>
       <button id="editCancel" class="btn ghost">Cancel</button>
+      <button id="editSave" class="btn primary">Save</button>
     </div>
-
   </div>
 </div>
-
 
 <!-- DELETE MODAL -->
-<div class="modal hidden" id="deleteModal">
+<div id="deleteModal" class="modal hidden">
   <div class="modal-box">
     <h3>Delete Company?</h3>
-    <p>This action cannot be undone.</p>
-
     <div class="modal-actions">
-      <button id="deleteConfirm" class="btn danger">Delete</button>
       <button id="deleteCancel" class="btn ghost">Cancel</button>
+      <button id="deleteConfirm" class="btn danger">Delete</button>
     </div>
   </div>
 </div>
 
-
 <!-- PREMIUM MODAL -->
-<div class="modal hidden" id="premiumModal">
+<div id="premiumModal" class="modal hidden">
   <div class="modal-box">
-    <h3>Set Premium Period</h3>
-
+    <h3>Set Premium</h3>
     <div class="form-grid">
-      <div><label>Start Date</label><input type="date" id="premiumStart"></div>
-      <div><label>End Date</label><input type="date" id="premiumEnd"></div>
+      <input id="premiumStart" type="date">
+      <input id="premiumEnd" type="date">
     </div>
-
     <div class="modal-actions">
-      <button id="premiumSave" class="btn primary">Save</button>
       <button id="premiumCancel" class="btn ghost">Cancel</button>
+      <button id="premiumSave" class="btn primary">Save</button>
     </div>
   </div>
 </div>
@@ -160,21 +123,25 @@
 <script src="admin-panel.js"></script>
 
 <script>
+// THEME
 const btn = document.getElementById("themeToggle");
-
 if (localStorage.getItem("theme") === "light") {
   document.body.classList.add("light");
   btn.textContent = "🌙";
 } else {
   btn.textContent = "☀️";
 }
-
 btn.onclick = () => {
   document.body.classList.toggle("light");
   const mode = document.body.classList.contains("light") ? "light" : "dark";
   localStorage.setItem("theme", mode);
   btn.textContent = mode === "light" ? "🌙" : "☀️";
 };
+
+// Redirect if not logged in
+if (!localStorage.getItem("admin_token")) {
+  window.location.href = "/admin.html";
+}
 </script>
 
 </body>

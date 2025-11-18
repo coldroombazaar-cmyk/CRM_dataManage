@@ -98,6 +98,12 @@ async function doSearch() {
   const q = searchBox.value.trim();
   const cat = searchCategory.value;
 
+  // 🔥 Prevent showing full list when typing 1 character
+  if (q.length < 2 && !cat) {
+    results.textContent = "Type at least 2 letters to search.";
+    return;
+  }
+
   results.innerHTML = "Searching...";
 
   let url = "/api/companies?q=" + encodeURIComponent(q);
@@ -113,6 +119,7 @@ async function doSearch() {
 
   results.innerHTML = list.map(render).join("");
 }
+
 
 function render(it) {
   return `
