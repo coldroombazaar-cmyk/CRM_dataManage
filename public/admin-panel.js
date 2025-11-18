@@ -13,7 +13,8 @@ const $ = id => document.getElementById(id);
 /* TOKEN HELPERS */
 const tokenKey = "admin_token";
 const getToken = () => localStorage.getItem(tokenKey) || "";
-const setToken = v => (v ? localStorage.setItem(tokenKey, v) : localStorage.removeItem(tokenKey));
+const setToken = v =>
+  v ? localStorage.setItem(tokenKey, v) : localStorage.removeItem(tokenKey);
 
 /* BASIC API WRAPPER */
 async function api(path, opts = {}) {
@@ -61,6 +62,7 @@ const btnExport = $("btnExport");
 const btnListAdmins = $("btnListAdmins");
 const btnDeleteSelected = $("btnDeleteSelected");
 
+/* pagination controls (may be null if HTML-এ নাই) */
 const btnPrevPage = $("btnPrevPage");
 const btnNextPage = $("btnNextPage");
 const pageInfo = $("pageInfo");
@@ -110,7 +112,9 @@ let currentPage = 1;
 let totalPages = 1;
 const pageSize = 25;
 
-/* LOAD CATEGORIES */
+/* ============================================================
+   LOAD CATEGORIES
+============================================================ */
 async function loadCategories() {
   try {
     const res = await fetch("/categories");
@@ -121,6 +125,7 @@ async function loadCategories() {
     editCategory.innerHTML = `<option value="">No category</option>`;
 
     categories.forEach(c => {
+      // sidebar item
       const div = document.createElement("div");
       div.className = "cat";
       div.textContent = c.name;
@@ -132,11 +137,13 @@ async function loadCategories() {
       };
       catsDiv.appendChild(div);
 
+      // top filter
       const opt1 = document.createElement("option");
       opt1.value = c.id;
       opt1.textContent = c.name;
       categoryFilter.appendChild(opt1);
 
+      // edit modal category
       const opt2 = document.createElement("option");
       opt2.value = c.id;
       opt2.textContent = c.name;
@@ -155,48 +162,66 @@ function syncCategoryUI() {
     const c = categories[idx];
     node.classList.toggle("active", c && c.id === currentCategory);
   });
-
   // top dropdown
-  categoryFilter.value = currentCategory ? String(currentCategory) : "";
+  if (categoryFilter) {
+    categoryFilter.value = currentCategory ? String(currentCategory) : "";
+  }
 }
 
 /* category dropdown change */
-categoryFilter.onchange = () => {
-  const val = categoryFilter.value;
-  currentCategory = val ? Number(val) : null;
-  currentPage = 1;
-  syncCategoryUI();
-  refresh();
-};
-
-/* LOGOUT */
-btnLogout.onclick = () => {
-  setToken(null);
-  window.location.href = "/admin.html";
-};
-
-/* PAGINATION BUTTONS */
-btnPrevPage.onclick = () => {
-  if (currentPage > 1) {
-    currentPage--;
+if (categoryFilter) {
+  categoryFilter.onchange = () => {
+    const val = categoryFilter.value;
+    currentCategory = val ? Number(val) : null;
+    currentPage = 1;
+    syncCategoryUI();
     refresh();
-  }
-};
+  };
+}
 
-btnNextPage.onclick = () => {
-  if (currentPage < totalPages) {
-    currentPage++;
+/* ============================================================
+   LOGOUT
+============================================================ */
+if (btnLogout) {
+  btnLogout.onclick = () => {
+    setToken(null);
+    window.location.href = "/admin.html";
+  };
+}
+
+/* ============================================================
+   PAGINATION BUTTONS (safe)
+============================================================ */
+if (btnPrevPage) {
+  btnPrevPage.onclick = () => {
+    if (currentPage > 1) {
+      currentPage--;
+      refresh();
+    }
+  };
+}
+if (btnNextPage) {
+  btnNextPage.onclick = () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      refresh();
+    }
+  };
+}
+
+/* ============================================================
+   REFRESH LIST
+============================================================ */
+if (btnRefresh) {
+  btnRefresh.onclick = () => {
+    currentPage = 1;
     refresh();
-  }
-};
-
-/* REFRESH LIST */
-btnRefresh.onclick = () => {
-  currentPage = 1;
-  refresh();
-};
+  };
+}
 
 async function refresh() {
+  if (!listEl) return;
+
   listEl.innerHTML = "<div class='small'>Loading…</div>";
   selectedIds.clear();
 
@@ -214,15 +239,16 @@ async function refresh() {
 
   lastRows = data.rows;
   const total = data.total || data.rows.length;
-
   totalPages = Math.max(1, Math.ceil(total / pageSize));
   if (currentPage > totalPages) currentPage = totalPages;
 
-  pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
-  btnPrevPage.disabled = currentPage <= 1;
-  btnNextPage.disabled = currentPage >= totalPages;
+  if (pageInfo) {
+    pageInfo.textContent = `Page ${currentPage} / ${totalPages}`;
+  }
+  if (btnPrevPage) btnPrevPage.disabled = currentPage <= 1;
+  if (btnNextPage) btnNextPage.disabled = currentPage >= totalPages;
 
-  const text = filterText.value.trim().toLowerCase();
+  const text = filterText ? filterText.value.trim().toLowerCase() : "";
   const filtered = text
     ? lastRows.filter(r => (r.businessName || "").toLowerCase().includes(text))
     : lastRows;
@@ -236,13 +262,20 @@ async function refresh() {
 
   listEl.querySelectorAll(".item").forEach(el => {
     const id = el.dataset.id;
-    el.querySelector("[data-edit]").onclick = () => openEdit(id);
-    el.querySelector("[data-del]").onclick = () => openDelete(id);
-    el.querySelector("[data-premium]").onclick = () => openPremium(id);
-    el.querySelector(".row-check").onchange = e => {
-      if (e.target.checked) selectedIds.add(id);
-      else selectedIds.delete(id);
-    };
+    const btnE = el.querySelector("[data-edit]");
+    const btnD = el.querySelector("[data-del]");
+    const btnP = el.querySelector("[data-premium]");
+    const chk = el.querySelector(".row-check");
+
+    if (btnE) btnE.onclick = () => openEdit(id);
+    if (btnD) btnD.onclick = () => openDelete(id);
+    if (btnP) btnP.onclick = () => openPremium(id);
+    if (chk) {
+      chk.onchange = e => {
+        if (e.target.checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+      };
+    }
   });
 }
 
@@ -291,12 +324,16 @@ function escapeHtml(s) {
   );
 }
 
-/* EDIT MODAL */
+/* ============================================================
+   EDIT MODAL
+============================================================ */
 function openEdit(id) {
   editingId = id;
 
   const it = lastRows.find(r => String(r.id) === String(id));
   if (!it) return;
+
+  if (!editModal) return;
 
   editName.value = it.businessName || "";
   editOwner.value = it.ownerName || "";
@@ -312,162 +349,198 @@ function openEdit(id) {
   editModal.classList.remove("hidden");
 }
 
-editCancel.onclick = () => editModal.classList.add("hidden");
-
-editSave.onclick = async () => {
-  await api(`/admin/companies/${editingId}`, {
-    method: "PUT",
-    body: {
-      businessName: editName.value,
-      ownerName: editOwner.value,
-      state: editState.value,
-      contactNumber: editPhone.value,
-      whatsappNumber: editWhatsapp.value,
-      email: editEmail.value,
-      website: editWebsite.value,
-      gstNo: editGst.value,
-      description: editDescription.value,
-      category_id: editCategory.value || null
-    }
-  });
-
-  editModal.classList.add("hidden");
-  refresh();
-};
-
-/* DELETE MODAL */
-function openDelete(id) {
-  deletingId = id;
-  deleteModal.classList.remove("hidden");
+if (editCancel) {
+  editCancel.onclick = () => editModal.classList.add("hidden");
 }
 
-deleteCancel.onclick = () => deleteModal.classList.add("hidden");
+if (editSave) {
+  editSave.onclick = async () => {
+    await api(`/admin/companies/${editingId}`, {
+      method: "PUT",
+      body: {
+        businessName: editName.value,
+        ownerName: editOwner.value,
+        state: editState.value,
+        contactNumber: editPhone.value,
+        whatsappNumber: editWhatsapp.value,
+        email: editEmail.value,
+        website: editWebsite.value,
+        gstNo: editGst.value,
+        description: editDescription.value,
+        category_id: editCategory.value || null
+      }
+    });
 
-deleteConfirm.onclick = async () => {
-  await api(`/admin/companies/${deletingId}`, { method: "DELETE" });
-  deleteModal.classList.add("hidden");
-  refresh();
-};
+    editModal.classList.add("hidden");
+    refresh();
+  };
+}
 
-/* PREMIUM MODAL */
+/* ============================================================
+   DELETE MODAL
+============================================================ */
+function openDelete(id) {
+  deletingId = id;
+  if (deleteModal) deleteModal.classList.remove("hidden");
+}
+
+if (deleteCancel) {
+  deleteCancel.onclick = () => deleteModal.classList.add("hidden");
+}
+
+if (deleteConfirm) {
+  deleteConfirm.onclick = async () => {
+    await api(`/admin/companies/${deletingId}`, { method: "DELETE" });
+    deleteModal.classList.add("hidden");
+    refresh();
+  };
+}
+
+/* ============================================================
+   PREMIUM MODAL
+============================================================ */
 function openPremium(id) {
   premiumForId = id;
+  if (!premiumModal) return;
+
   premiumStart.value = new Date().toISOString().slice(0, 10);
   premiumEnd.value = "";
   premiumModal.classList.remove("hidden");
 }
 
-premiumCancel.onclick = () => premiumModal.classList.add("hidden");
+if (premiumCancel) {
+  premiumCancel.onclick = () => premiumModal.classList.add("hidden");
+}
 
-premiumSave.onclick = async () => {
-  await api(`/admin/companies/${premiumForId}/premium`, {
-    method: "POST",
-    body: {
-      start: premiumStart.value,
-      end: premiumEnd.value
-    }
-  });
+if (premiumSave) {
+  premiumSave.onclick = async () => {
+    await api(`/admin/companies/${premiumForId}/premium`, {
+      method: "POST",
+      body: {
+        start: premiumStart.value,
+        end: premiumEnd.value
+      }
+    });
 
-  premiumModal.classList.add("hidden");
-  refresh();
-};
-
-/* IMPORT */
-btnImport.onclick = async () => {
-  const file = importFile.files[0];
-
-  if (!file) {
-    importStatus.textContent = "No file selected.";
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append("file", file);
-
-  importStatus.textContent = "Uploading…";
-
-  const res = await fetch("/admin/import", {
-    method: "POST",
-    headers: { Authorization: "Bearer " + getToken() },
-    body: fd
-  });
-
-  const txt = await res.text();
-  let data;
-  try {
-    data = JSON.parse(txt);
-  } catch {
-    data = txt;
-  }
-
-  importStatus.textContent = res.ok ? "Import successful!" : "Import failed!";
-  importLog.textContent = JSON.stringify(data, null, 2);
-
-  if (res.ok) {
-    await loadCategories();
+    premiumModal.classList.add("hidden");
     refresh();
-  }
-};
+  };
+}
 
-/* EXPORT */
-btnExport.onclick = async () => {
-  const cat = currentCategory ? `&categoryId=${currentCategory}` : "";
+/* ============================================================
+   IMPORT
+============================================================ */
+if (btnImport) {
+  btnImport.onclick = async () => {
+    const file = importFile.files[0];
 
-  const res = await fetch(`/admin/export?format=xlsx${cat}`, {
-    headers: { Authorization: "Bearer " + getToken() }
-  });
+    if (!file) {
+      importStatus.textContent = "No file selected.";
+      return;
+    }
 
-  if (!res.ok) {
-    alert("Export failed");
-    return;
-  }
+    const fd = new FormData();
+    fd.append("file", file);
 
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
+    importStatus.textContent = "Uploading…";
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "companies.xlsx";
-  a.click();
-};
+    const res = await fetch("/admin/import", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + getToken() },
+      body: fd
+    });
 
-/* NOTIFICATIONS */
-btnListAdmins.onclick = async () => {
-  const list = await api("/admin/notifications");
+    const txt = await res.text();
+    let data;
+    try {
+      data = JSON.parse(txt);
+    } catch {
+      data = txt;
+    }
 
-  if (!list?.length) {
-    alert("No notifications.");
-    return;
-  }
+    importStatus.textContent = res.ok ? "Import successful!" : "Import failed!";
+    importLog.textContent = JSON.stringify(data, null, 2);
 
-  alert(
-    list
-      .slice(0, 20)
-      .map(n => `${n.created_at} — ${n.type}: ${n.message}`)
-      .join("\n\n")
-  );
-};
+    if (res.ok) {
+      await loadCategories();
+      refresh();
+    }
+  };
+}
 
-/* DELETE SELECTED */
-btnDeleteSelected.onclick = async () => {
-  if (!selectedIds.size) {
-    alert("No companies selected.");
-    return;
-  }
+/* ============================================================
+   EXPORT
+============================================================ */
+if (btnExport) {
+  btnExport.onclick = async () => {
+    const cat = currentCategory ? `&categoryId=${currentCategory}` : "";
 
-  if (!confirm(`Delete ${selectedIds.size} items?`)) return;
+    const res = await fetch(`/admin/export?format=xlsx${cat}`, {
+      headers: { Authorization: "Bearer " + getToken() }
+    });
 
-  await Promise.all(
-    [...selectedIds].map(id =>
-      api(`/admin/companies/${id}`, { method: "DELETE" })
-    )
-  );
+    if (!res.ok) {
+      alert("Export failed");
+      return;
+    }
 
-  selectedIds.clear();
-  refresh();
-};
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
 
-/* INIT */
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "companies.xlsx";
+    a.click();
+  };
+}
+
+/* ============================================================
+   NOTIFICATIONS
+============================================================ */
+if (btnListAdmins) {
+  btnListAdmins.onclick = async () => {
+    const list = await api("/admin/notifications");
+
+    if (!list?.length) {
+      alert("No notifications.");
+      return;
+    }
+
+    alert(
+      list
+        .slice(0, 20)
+        .map(n => `${n.created_at} — ${n.type}: ${n.message}`)
+        .join("\n\n")
+    );
+  };
+}
+
+/* ============================================================
+   DELETE SELECTED
+============================================================ */
+if (btnDeleteSelected) {
+  btnDeleteSelected.onclick = async () => {
+    if (!selectedIds.size) {
+      alert("No companies selected.");
+      return;
+    }
+
+    if (!confirm(`Delete ${selectedIds.size} items?`)) return;
+
+    await Promise.all(
+      [...selectedIds].map(id =>
+        api(`/admin/companies/${id}`, { method: "DELETE" })
+      )
+    );
+
+    selectedIds.clear();
+    refresh();
+  };
+}
+
+/* ============================================================
+   INIT
+============================================================ */
 (async function init() {
   if (!getToken()) {
     window.location.href = "/admin.html";
