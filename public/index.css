@@ -35,9 +35,11 @@ body {
 }
 
 .container {
-  max-width: 1100px;
-  margin: auto;
+  max-width: 1200px; /* adjust to your liking */
+  margin: 0 auto;    /* center it */
+  padding: 20px;
 }
+
 
 /* ===========================================================
    HERO SECTION
@@ -83,16 +85,18 @@ body {
 .grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  column-gap: 30px;
+  column-gap: 60px;
   row-gap: 22px;
 }
 
 .col-6 {
   grid-column: span 1;
+  margin-right: 40px;
 }
 
 .col-12 {
   grid-column: 1 / -1;
+  margin-right: 40px;
 }
 
 /* ALL FORM ELEMENTS 100% WIDTH */
@@ -100,7 +104,7 @@ body {
 .grid select,
 .grid textarea,
 .multi-select-display {
-  width: 90% !important;
+  width: 100% !important;
   display: block;
 }
 
