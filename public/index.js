@@ -6,6 +6,11 @@ const imagesInput = $("images");
 const preview = $("preview");
 const msg = $("msg");
 
+/* FORM MODAL ELEMENTS */
+const formModal = $("formModal");
+const addFormBtn = $("addFormBtn");
+const closeFormModal = $("closeFormModal");
+
 /* SEARCH ELEMENTS */
 const searchCategory = $("searchCategory");
 const searchBox = $("searchBox");
@@ -63,6 +68,23 @@ function renderCategoryCheckboxes(filter = "") {
       `;
     });
 }
+
+/* =====================================
+   FORM MODAL HANDLERS
+===================================== */
+addFormBtn.onclick = () => {
+  formModal.classList.remove("hidden");
+};
+
+closeFormModal.onclick = () => {
+  formModal.classList.add("hidden");
+};
+
+formModal.onclick = (e) => {
+  if (e.target === formModal) {
+    formModal.classList.add("hidden");
+  }
+};
 
 /* =====================================
    OPEN POPUP

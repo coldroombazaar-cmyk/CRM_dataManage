@@ -22,11 +22,21 @@
 
 <div class="container">
 
-  <!-- ADD FORM -->
+  <!-- ADD BUTTON -->
   <section class="card">
     <h2>Add Business</h2>
+    <button id="addFormBtn" class="primary">+ Add New Business</button>
+  </section>
 
-    <form id="addForm" class="grid" enctype="multipart/form-data">
+  <!-- ADD FORM MODAL -->
+  <div id="formModal" class="form-modal hidden">
+    <div class="form-modal-box">
+      <div class="form-modal-header">
+        <h2>Add Business</h2>
+        <button id="closeFormModal" class="close-btn">&times;</button>
+      </div>
+
+      <form id="addForm" class="grid" enctype="multipart/form-data">
       
       <div class="col-6">
         <label>Business Name *</label>
@@ -103,7 +113,8 @@
       </div>
 
     </form>
-  </section>
+    </div>
+  </div>
 
   <!-- SEARCH -->
   <section class="card">
