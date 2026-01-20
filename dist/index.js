@@ -1,4 +1,5 @@
 const $ = id => document.getElementById(id);
+const API_URL = window.API_CONFIG?.API_BASE_URL || 'http://localhost:3000';
 
 /* FORM ELEMENTS */
 const addForm = $("addForm");
@@ -37,7 +38,7 @@ let selectedCategoryIds = [];
    LOAD CATEGORIES
 ===================================== */
 async function loadCategories() {
-  const res = await fetch("/categories");
+  const res = await fetch(API_URL + "/categories");
   allCategories = await res.json();
 
   // Search dropdown
@@ -148,7 +149,7 @@ addForm.onsubmit = async e => {
   const fd = new FormData(addForm);
   fd.append("categoryIds", JSON.stringify(selectedCategoryIds));
 
-  const res = await fetch("/api/companies", {
+  const res = await fetch(API_URL + "/api/companies", {
     method: "POST",
     body: fd
   });
@@ -200,7 +201,7 @@ async function doSearch() {
 
   results.innerHTML = "Searching...";
 
-  let url = "/api/companies?q=" + encodeURIComponent(q);
+  let url = API_URL + "/api/companies?q=" + encodeURIComponent(q);
   if (cat) url += "&categoryId=" + encodeURIComponent(cat);
 
   const r = await fetch(url);

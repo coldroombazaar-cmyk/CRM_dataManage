@@ -2,6 +2,7 @@
    SHORTCUTS & GLOBALS
 ============================================================ */
 const $ = id => document.getElementById(id);
+const API_URL = window.API_CONFIG?.API_BASE_URL || 'http://localhost:3000';
 const tokenKey = "admin_token";
 const getToken = () => localStorage.getItem(tokenKey);
 const setToken = v =>
@@ -11,6 +12,9 @@ const setToken = v =>
    API WRAPPER
 ============================================================ */
 async function api(path, opts = {}) {
+  // Prepend API_URL if path doesn't start with http
+  const fullPath = path.startsWith('http') ? path : (API_URL + path);
+  
   opts.headers = opts.headers || {};
   const token = getToken();
   if (!token) {
@@ -25,7 +29,7 @@ async function api(path, opts = {}) {
     opts.body = JSON.stringify(opts.body);
   }
 
-  const res = await fetch(path, opts);
+  const res = await fetch(fullPath, opts);
   if (res.status === 401) {
     setToken(null);
     window.location.href = "/admin.html";
