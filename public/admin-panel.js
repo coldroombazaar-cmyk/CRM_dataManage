@@ -47,6 +47,9 @@ const catsDiv = $("cats");
 const catSearch = $("categorySearch");
 const filterText = $("filterText");
 const listEl = $("list");
+const sidebar = $("sidebar");
+const mobileSidebarToggle = $("mobileSidebarToggle");
+const layout = $("layout");
 
 const btnRefresh = $("btnRefresh");
 const btnLogout = $("btnLogout");
@@ -262,6 +265,33 @@ function syncCategoryUI() {
       const c = categories.find(cat => cat.id === currentCategory);
       categorySelected.textContent = c ? c.name : "All categories";
     }
+  }
+}
+
+/* ============================================================
+   MOBILE MENU HANDLER
+============================================================ */
+if (mobileSidebarToggle && sidebar) {
+  mobileSidebarToggle.onclick = () => {
+    sidebar.classList.toggle("active");
+  };
+
+  // Close sidebar when clicking on a button in the sidebar
+  sidebar.querySelectorAll(".btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove("active");
+      }
+    });
+  });
+
+  // Close sidebar when clicking main content on mobile
+  if (layout) {
+    layout.addEventListener("click", (e) => {
+      if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !mobileSidebarToggle.contains(e.target)) {
+        sidebar.classList.remove("active");
+      }
+    });
   }
 }
 

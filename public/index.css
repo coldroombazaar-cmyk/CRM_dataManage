@@ -402,3 +402,296 @@ button {
 .form-modal-box form {
   padding: 20px;
 }
+
+/* ===========================================================
+   MOBILE RESPONSIVENESS
+=========================================================== */
+
+/* Tablet (1024px and below) */
+@media (max-width: 1024px) {
+  body {
+    padding: 12px;
+  }
+
+  .container {
+    padding: 12px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .col-6,
+  .col-12 {
+    grid-column: span 1;
+  }
+}
+
+/* Mobile (768px and below) */
+@media (max-width: 768px) {
+  body {
+    padding: 8px;
+  }
+
+  .container {
+    padding: 8px;
+    max-width: 100%;
+  }
+
+  .theme-toggle {
+    top: 8px;
+    right: 8px;
+  }
+
+  .hero {
+    margin-bottom: 20px;
+    padding: 12px;
+  }
+
+  .hero h1 {
+    font-size: 24px;
+  }
+
+  .hero p {
+    font-size: 14px;
+  }
+
+  .card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .card h2 {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .col-6,
+  .col-12 {
+    grid-column: span 1;
+  }
+
+  /* Form inputs */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  label {
+    font-size: 13px;
+  }
+
+  .controls {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .controls button {
+    flex: 1;
+    min-width: 100px;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .primary,
+  .ghost {
+    width: auto;
+  }
+
+  /* Search section */
+  .search-row {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .search-row input,
+  .search-row select,
+  .search-row button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* Results */
+  .results {
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  /* Multi-select popup */
+  .cat-modal-box {
+    width: 85%;
+    max-width: 100%;
+    padding: 16px;
+  }
+
+  .cat-modal-box h3 {
+    font-size: 16px;
+  }
+
+  .checkbox-list {
+    max-height: 300px;
+  }
+
+  .checkbox-list label {
+    font-size: 14px;
+    padding: 6px 0;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  /* Form modal */
+  .form-modal-box {
+    width: 90%;
+    max-width: 100%;
+    max-height: 85vh;
+    padding: 0;
+  }
+
+  .form-modal-header {
+    padding: 12px;
+  }
+
+  .form-modal-header h2 {
+    font-size: 16px;
+  }
+
+  .close-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 24px;
+  }
+
+  .form-modal-box form {
+    padding: 12px;
+  }
+
+  /* Multi-select display */
+  .multi-select-display {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  /* Preview images */
+  #preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  #preview img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .suggest-box {
+    max-width: 100%;
+  }
+}
+
+/* Small mobile (480px and below) */
+@media (max-width: 480px) {
+  body {
+    padding: 4px;
+  }
+
+  .container {
+    padding: 4px;
+  }
+
+  .theme-toggle button {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  .hero h1 {
+    font-size: 20px;
+  }
+
+  .hero p {
+    font-size: 13px;
+  }
+
+  .card h2 {
+    font-size: 16px;
+  }
+
+  .grid {
+    gap: 8px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    padding: 8px;
+  }
+
+  label {
+    font-size: 12px;
+  }
+
+  .controls button {
+    min-width: 80px;
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .search-row input,
+  .search-row select,
+  .search-row button {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .cat-modal-box {
+    padding: 12px;
+  }
+
+  .checkbox-list {
+    max-height: 250px;
+  }
+
+  #preview {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  }
+
+  #preview img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .form-modal-box {
+    width: 95%;
+  }
+
+  .modal-actions button {
+    padding: 8px;
+    font-size: 12px;
+  }
+}

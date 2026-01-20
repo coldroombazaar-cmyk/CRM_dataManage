@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Admin Login</title>
   <style>
     body {
@@ -42,6 +44,52 @@
       margin-top: 10px;
     }
     button:hover { opacity: 0.85; }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      body {
+        height: 100vh;
+        padding: 20px;
+      }
+
+      .login-box {
+        width: 100%;
+        max-width: 360px;
+        padding: 20px;
+      }
+
+      .login-box h2 {
+        font-size: 20px;
+        margin-top: 0;
+      }
+
+      input,
+      button {
+        font-size: 16px;
+        padding: 12px;
+      }
+
+      input {
+        width: 100%;
+      }
+
+      #msg {
+        font-size: 13px;
+        margin-top: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .login-box {
+        padding: 16px;
+      }
+
+      input,
+      button {
+        padding: 10px;
+        font-size: 15px;
+      }
+    }
   </style>
 </head>
 <body>

@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Admin Panel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>CRM — Admin Panel</title>
 
-<link rel="stylesheet" href="admin-panel.css">
+  <link rel="stylesheet" href="admin-panel.css">
 </head>
 
 <body>
 
 <!-- THEME BUTTON -->
-<button id="themeToggle" class="theme-btn">☀️</button>
+<button id="themeToggle" class="theme-btn" aria-label="Toggle theme">☀️</button>
+<button id="mobileSidebarToggle" class="mobile-menu-btn" aria-label="Toggle sidebar">☰</button>
 
 <div class="app">
 
@@ -22,10 +25,10 @@
   <div id="info" class="sub">Checking…</div>
 </header>
 
-<div class="layout">
+<div class="layout" id="layout">
 
   <!-- SIDEBAR -->
-  <div class="sidebar">
+  <div class="sidebar" id="sidebar">
 
     <div class="card">
         <h3>Categories</h3>
