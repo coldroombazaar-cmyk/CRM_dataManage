@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>CRM — Admin Panel</title>
+
+  <link rel="stylesheet" href="admin-panel.css">
+</head>
+
+<body>
+
+<!-- THEME BUTTON -->
+<button id="themeToggle" class="theme-btn" aria-label="Toggle theme">☀️</button>
+<button id="mobileSidebarToggle" class="mobile-menu-btn" aria-label="Toggle sidebar">☰</button>
+
+<div class="app">
+
+<header class="header">
+  <div>
+    <h1>Admin Panel</h1>
+    <p class="sub">Manage Companies • Categories • Import • Export</p>
+  </div>
+  <div id="info" class="sub">Checking…</div>
+</header>
+
+<div class="layout" id="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+
+    <div class="card">
+        <h3>Categories</h3>
+
+        <!-- Category search -->
+        <input 
+            id="categorySearch" 
+            type="text" 
+            placeholder="Search categories..." 
+            class="search-input"
+            style="margin: 10px 0; width:100%;"
+        >
+
+        <div id="cats" style="margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>Import</h3>
+      <input type="file" id="importFile">
+      <button id="btnImport" class="btn primary full">Import Now</button>
+      <div id="importStatus"></div>
+      <pre id="importLog"></pre>
+    </div>
+
+    <div class="card">
+      <button id="btnExport" class="btn full ghost">Export XLSX</button>
+      <button id="btnListAdmins" class="btn full ghost">Notifications</button>
+      <button id="btnDeleteSelected" class="btn full danger">Delete Selected</button>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="toolbar">
+
+      <!-- SEARCH COMPANY -->
+      <input type="text" id="filterText" placeholder="Search companies..." class="search-input">
+
+      <!-- Correct Category Dropdown -->
+      <div class="dropdown" id="categoryDropdown">
+          <div class="dropdown-selected" id="categorySelected">All categories</div>
+
+          <div class="dropdown-menu hidden" id="categoryMenu">
+              <input type="text" id="categorySearchInput" placeholder="Search category..." class="dropdown-search">
+
+              <div id="categoryOptions" class="dropdown-options"></div>
+          </div>
+      </div>
+
+      <button id="btnRefresh" class="btn primary">Refresh</button>
+      <button id="btnExport" class="btn ghost">Export XLSX</button>
+      <button id="btnListAdmins" class="btn ghost">Notifications</button>
+      <button id="btnLogout" class="btn danger">Logout</button>
+      <button id="btnDeleteSelected" class="btn danger">Delete Selected</button>
+    </div>
+
+    <!-- COMPANY LIST -->
+    <div id="list" class="company-list"></div>
+
+  </div>
+
+</div>
+
+<!-- PAGINATION BAR -->
+<div class="pagination-bar">
+    <button id="btnPrevPage" class="btn ghost small">← Prev</button>
+    <span id="pageInfo">Page 1 / 1</span>
+    <button id="btnNextPage" class="btn ghost small">Next →</button>
+
+    <button id="btnGoTop" class="btn primary small" style="margin-left:auto;">
+        Go to Top ↑
+    </button>
+</div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Edit Company</h3>
+
+    <div class="form-grid">
+      <input id="editName" placeholder="Business Name" class="full">
+      <input id="editOwner" placeholder="Owner Name">
+      <input id="editState" placeholder="State">
+      <input id="editPhone" placeholder="Phone">
+      <input id="editWhatsapp" placeholder="WhatsApp">
+      <input id="editEmail" placeholder="Email">
+      <input id="editWebsite" placeholder="Website">
+      <input id="editGst" placeholder="GST No" class="full">
+      <select id="editCategory" class="full"></select>
+      <textarea id="editDescription" placeholder="Description" class="full"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button id="editCancel" class="btn ghost">Cancel</button>
+      <button id="editSave" class="btn primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Delete Company?</h3>
+    <div class="modal-actions">
+      <button id="deleteCancel" class="btn ghost">Cancel</button>
+      <button id="deleteConfirm" class="btn danger">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- PREMIUM MODAL -->
+<div id="premiumModal" class="modal hidden">
+  <div class="modal-box">
+    <h3>Set Premium</h3>
+    <div class="form-grid">
+      <input id="premiumStart" type="date">
+      <input id="premiumEnd" type="date">
+    </div>
+    <div class="modal-actions">
+      <button id="premiumCancel" class="btn ghost">Cancel</button>
+      <button id="premiumSave" class="btn primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="admin-panel.js"></script>
+
+<script>
+// THEME HANDLER
+const btn = document.getElementById("themeToggle");
+if (localStorage.getItem("theme") === "light") {
+  document.body.classList.add("light");
+  btn.textContent = "🌙";
+} else {
+  btn.textContent = "☀️";
+}
+
+btn.onclick = () => {
+  document.body.classList.toggle("light");
+  const mode = document.body.classList.contains("light") ? "light" : "dark";
+  localStorage.setItem("theme", mode);
+  btn.textContent = mode === "light" ? "🌙" : "☀️";
+};
+
+// If no token → redirect to login
+if (!localStorage.getItem("admin_token")) {
+  window.location.href = "/admin.html";
+}
+</script>
+
+</body>
+</html>

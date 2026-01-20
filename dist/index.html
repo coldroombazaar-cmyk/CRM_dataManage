@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>CRM — Add & Search</title>
+
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+<!-- DARK MODE BUTTON -->
+<div class="theme-toggle">
+  <button id="toggleTheme">🌙 Dark</button>
+</div>
+
+<!-- HERO SECTION -->
+<section class="hero">
+  <h1>CRM Manager</h1>
+  <p>Manage your business contacts with speed & simplicity.</p>
+</section>
+
+<div class="container">
+
+  <!-- ADD BUTTON -->
+  <section class="card">
+    <h2>Add Business</h2>
+    <button id="addFormBtn" class="primary">+ Add New Business</button>
+  </section>
+
+  <!-- ADD FORM MODAL -->
+  <div id="formModal" class="form-modal hidden">
+    <div class="form-modal-box">
+      <div class="form-modal-header">
+        <h2>Add Business</h2>
+        <button id="closeFormModal" class="close-btn">&times;</button>
+      </div>
+
+      <form id="addForm" class="grid" enctype="multipart/form-data">
+      
+      <div class="col-6">
+        <label>Business Name *</label>
+        <input id="businessName" name="businessName" required>
+      </div>
+
+      <div class="col-6">
+        <label>Owner Name</label>
+        <input id="ownerName" name="ownerName">
+      </div>
+
+      <div class="col-6">
+        <label>Categories</label>
+
+        <!-- visible clickable bar -->
+        <div id="multiCatSelect" class="multi-select-display">
+          Select Categories
+        </div>
+
+        <!-- hidden input for server -->
+        <input type="hidden" id="selectedCategories" name="selectedCategories">
+      </div>
+
+      <div class="col-6">
+        <label>State *</label>
+        <input id="state" name="state" required>
+      </div>
+
+      <div class="col-6">
+        <label>Phone</label>
+        <input id="contactNumber" name="contactNumber">
+      </div>
+
+      <div class="col-6">
+        <label>WhatsApp</label>
+        <input id="whatsappNumber" name="whatsappNumber">
+      </div>
+
+      <div class="col-6">
+        <label>Email</label>
+        <input id="email" type="email" name="email">
+      </div>
+
+      <div class="col-6">
+        <label>Website</label>
+        <input id="website" name="website">
+      </div>
+
+      <div class="col-6">
+        <label>GST No</label>
+        <input id="gstNo" name="gstNo">
+      </div>
+
+      <div class="col-6">
+        <label>Capacity</label>
+        <input id="capacity" name="capacity">
+      </div>
+
+      <div class="col-12">
+        <label>Description</label>
+        <textarea id="description" name="description"></textarea>
+      </div>
+
+      <div class="col-12">
+        <label>Images</label>
+        <input id="images" name="images" type="file" multiple>
+        <div id="preview"></div>
+      </div>
+
+      <div class="col-12 controls">
+        <button class="primary" type="submit">Add</button>
+        <button class="ghost" type="button" id="clear">Clear</button>
+        <span id="msg"></span>
+      </div>
+
+    </form>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <section class="card">
+    <h2>Search</h2>
+
+    <div class="search-row">
+      <input id="searchBox" placeholder="Search businesses...">
+      <select id="searchCategory">
+        <option value="">All</option>
+      </select>
+      <button id="searchBtn" class="primary">Search</button>
+
+      <div id="suggestBox" class="suggest-box"></div>
+    </div>
+
+    <div id="results" class="results">Start searching…</div>
+  </section>
+
+</div>
+
+<!-- MULTI CATEGORY POPUP -->
+<div id="categoryModal" class="cat-modal hidden">
+  <div class="cat-modal-box">
+    <h3>Select Categories</h3>
+
+    <input type="text" id="catSearchPopup" placeholder="Search..." class="popup-search">
+
+    <div id="catCheckboxList" class="checkbox-list"></div>
+
+    <div class="modal-actions">
+      <button id="catCancel" class="ghost">Cancel</button>
+      <button id="catApply" class="primary">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORTANT: JS AT BOTTOM -->
+<script src="index.js"></script>
+
+</body>
+</html>
