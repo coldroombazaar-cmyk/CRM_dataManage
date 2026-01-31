@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
@@ -11,179 +12,286 @@
 
 <body>
 
-<!-- THEME BUTTON -->
-<button id="themeToggle" class="theme-btn" aria-label="Toggle theme">☀️</button>
-<button id="mobileSidebarToggle" class="mobile-menu-btn" aria-label="Toggle sidebar">☰</button>
+  <!-- THEME BUTTON -->
+  <button id="themeToggle" class="theme-btn" aria-label="Toggle theme">☀️</button>
+  <button id="mobileSidebarToggle" class="mobile-menu-btn" aria-label="Toggle sidebar">☰</button>
 
-<div class="app">
+  <div class="app">
 
-<header class="header">
-  <div>
-    <h1>Admin Panel</h1>
-    <p class="sub">Manage Companies • Categories • Import • Export</p>
-  </div>
-  <div id="info" class="sub">Checking…</div>
-</header>
-
-<div class="layout" id="layout">
-
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-
-    <div class="card">
-        <h3>Categories</h3>
-
-        <!-- Category search -->
-        <input 
-            id="categorySearch" 
-            type="text" 
-            placeholder="Search categories..." 
-            class="search-input"
-            style="margin: 10px 0; width:100%;"
-        >
-
-        <div id="cats" style="margin-top:12px;"></div>
-    </div>
-
-    <div class="card">
-      <h3>Import</h3>
-      <input type="file" id="importFile">
-      <button id="btnImport" class="btn primary full">Import Now</button>
-      <div id="importStatus"></div>
-      <pre id="importLog"></pre>
-    </div>
-
-    <div class="card">
-      <button id="btnExport" class="btn full ghost">Export XLSX</button>
-      <button id="btnListAdmins" class="btn full ghost">Notifications</button>
-      <button id="btnDeleteSelected" class="btn full danger">Delete Selected</button>
-    </div>
-
-  </div>
-
-  <!-- MAIN -->
-  <div class="main">
-
-    <div class="toolbar">
-
-      <!-- SEARCH COMPANY -->
-      <input type="text" id="filterText" placeholder="Search companies..." class="search-input">
-
-      <!-- Correct Category Dropdown -->
-      <div class="dropdown" id="categoryDropdown">
-          <div class="dropdown-selected" id="categorySelected">All categories</div>
-
-          <div class="dropdown-menu hidden" id="categoryMenu">
-              <input type="text" id="categorySearchInput" placeholder="Search category..." class="dropdown-search">
-
-              <div id="categoryOptions" class="dropdown-options"></div>
-          </div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>Cold Room Bazaar</h2>
       </div>
 
-      <button id="btnRefresh" class="btn primary">Refresh</button>
-      <button id="btnExport" class="btn ghost">Export XLSX</button>
-      <button id="btnListAdmins" class="btn ghost">Notifications</button>
-      <button id="btnLogout" class="btn danger">Logout</button>
-      <button id="btnDeleteSelected" class="btn danger">Delete Selected</button>
-    </div>
+      <nav class="sidebar-menu">
+        <div class="menu-section">
+          <div class="menu-label">MENU</div>
+          <div id="menuDashboard" class="menu-item active">
+            <span>📊</span>
+            <span>Dashboard</span>
+          </div>
+          <div id="menuBusinessOwner" class="menu-item">
+            <span>🏢</span>
+            <span>Manage Business Owner</span>
+          </div>
+          <div id="menuCategory" class="menu-item">
+            <span>📁</span>
+            <span>Manage Category</span>
+          </div>
+          <div id="menuBrands" class="menu-item">
+            <span>🏷️</span>
+            <span>Manage Brands</span>
+          </div>
+        </div>
 
-    <!-- COMPANY LIST -->
-    <div id="list" class="company-list"></div>
+        <!-- CATEGORIES SECTION -->
+        <div class="menu-section">
+          <div class="menu-label">CATEGORIES</div>
+          <input id="categorySearch" type="text" placeholder="Search categories..." class="search-input"
+            style="margin: 10px 20px; width: calc(100% - 40px);">
+          <div id="cats" style="padding: 0 10px;"></div>
+        </div>
+
+        <!-- IMPORT/EXPORT SECTION -->
+        <div class="card" style="margin: 20px;">
+          <h3>Import Data</h3>
+          <input type="file" id="importFile" style="margin-bottom: 10px; font-size: 12px;">
+          <button id="btnImport" class="btn btn-primary" style="width: 100%; font-size: 13px;">Import Now</button>
+          <div id="importStatus" style="margin-top: 10px; font-size: 12px; color: #fff;"></div>
+          <pre id="importLog" style="font-size: 11px; color: #ddd;"></pre>
+        </div>
+
+        <div style="padding: 0 20px;">
+          <button id="btnExportSidebar" class="btn btn-ghost"
+            style="width: 100%; margin-bottom: 8px; font-size: 13px;">Export XLSX</button>
+          <button id="btnListAdminsSidebar" class="btn btn-ghost"
+            style="width: 100%; margin-bottom: 8px; font-size: 13px;">Notifications</button>
+          <button id="btnDeleteSelectedSidebar" class="btn btn-danger" style="width: 100%; font-size: 13px;">Delete
+            Selected</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+      <!-- HEADER -->
+      <header class="header">
+        <div class="header-left">
+          <h1>Manage Business Owner</h1>
+        </div>
+        <div class="header-right">
+          <div class="user-info">
+            <div class="user-avatar">T</div>
+            <span class="user-name">Techno Fitness</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <div class="content">
+
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+          <h2 class="page-title">MANAGE BUSINESS OWNER</h2>
+          <div class="breadcrumb">
+            <a href="#">Dashboard</a> > Manage Business Owner
+          </div>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button id="btnAddData" class="btn btn-primary">+ Add Data</button>
+            <button id="btnExportExcel" class="btn btn-ghost">Export to Excel</button>
+            <input type="text" id="filterText" placeholder="Search companies..." class="search-input">
+          </div>
+          <div class="toolbar-right">
+            <!-- Custom Category Dropdown -->
+            <div class="dropdown" id="categoryDropdown">
+              <div class="dropdown-selected" id="categorySelected">All categories</div>
+              <div class="dropdown-menu hidden" id="categoryMenu">
+                <input type="text" id="categorySearchInput" placeholder="Search category..." class="dropdown-search">
+                <div id="categoryOptions" class="dropdown-options"></div>
+              </div>
+            </div>
+            <button id="btnRefresh" class="btn btn-primary">Refresh</button>
+            <button id="btnLogout" class="btn btn-danger">Logout</button>
+          </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="width: 50px;">No.</th>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Company Name</th>
+                <th>Contact Number</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th style="width: 150px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="list">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px;">
+                  <div style="color: #95a5a6;">Loading companies...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PAGINATION -->
+        <div class="pagination-bar">
+          <div class="pagination-info">
+            <span id="pageInfo">Page 1 / 1</span>
+          </div>
+          <div class="pagination-controls">
+            <button id="btnPrevPage" class="btn btn-ghost btn-sm">← Prev</button>
+            <button id="btnNextPage" class="btn btn-ghost btn-sm">Next →</button>
+            <button id="btnGoTop" class="btn btn-primary btn-sm">Go to Top ↑</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
 
   </div>
 
-</div>
-
-<!-- PAGINATION BAR -->
-<div class="pagination-bar">
-    <button id="btnPrevPage" class="btn ghost small">← Prev</button>
-    <span id="pageInfo">Page 1 / 1</span>
-    <button id="btnNextPage" class="btn ghost small">Next →</button>
-
-    <button id="btnGoTop" class="btn primary small" style="margin-left:auto;">
-        Go to Top ↑
-    </button>
-</div>
-
-</div>
-
-<!-- EDIT MODAL -->
-<div id="editModal" class="modal hidden">
-  <div class="modal-box">
-    <h3>Edit Company</h3>
-
-    <div class="form-grid">
-      <input id="editName" placeholder="Business Name" class="full">
-      <input id="editOwner" placeholder="Owner Name">
-      <input id="editState" placeholder="State">
-      <input id="editPhone" placeholder="Phone">
-      <input id="editWhatsapp" placeholder="WhatsApp">
-      <input id="editEmail" placeholder="Email">
-      <input id="editWebsite" placeholder="Website">
-      <input id="editGst" placeholder="GST No" class="full">
-      <select id="editCategory" class="full"></select>
-      <textarea id="editDescription" placeholder="Description" class="full"></textarea>
-    </div>
-
-    <div class="modal-actions">
-      <button id="editCancel" class="btn ghost">Cancel</button>
-      <button id="editSave" class="btn primary">Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- DELETE MODAL -->
-<div id="deleteModal" class="modal hidden">
-  <div class="modal-box">
-    <h3>Delete Company?</h3>
-    <div class="modal-actions">
-      <button id="deleteCancel" class="btn ghost">Cancel</button>
-      <button id="deleteConfirm" class="btn danger">Delete</button>
-    </div>
-  </div>
-</div>
-
-<!-- PREMIUM MODAL -->
-<div id="premiumModal" class="modal hidden">
-  <div class="modal-box">
-    <h3>Set Premium</h3>
-    <div class="form-grid">
-      <input id="premiumStart" type="date">
-      <input id="premiumEnd" type="date">
-    </div>
-    <div class="modal-actions">
-      <button id="premiumCancel" class="btn ghost">Cancel</button>
-      <button id="premiumSave" class="btn primary">Save</button>
+  <!-- EDIT MODAL -->
+  <div id="editModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Edit Company</h3>
+        <button id="editCancel" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Business Name</label>
+            <input id="editName" placeholder="Business Name">
+          </div>
+          <div class="form-group">
+            <label>Owner Name</label>
+            <input id="editOwner" placeholder="Owner Name">
+          </div>
+          <div class="form-group">
+            <label>State</label>
+            <input id="editState" placeholder="State">
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input id="editPhone" placeholder="Phone">
+          </div>
+          <div class="form-group">
+            <label>WhatsApp</label>
+            <input id="editWhatsapp" placeholder="WhatsApp">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input id="editEmail" placeholder="Email">
+          </div>
+          <div class="form-group">
+            <label>Website</label>
+            <input id="editWebsite" placeholder="Website">
+          </div>
+          <div class="form-group full">
+            <label>GST No</label>
+            <input id="editGst" placeholder="GST No">
+          </div>
+          <div class="form-group full">
+            <label>Category</label>
+            <select id="editCategory"></select>
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea id="editDescription" placeholder="Description"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="editCancelBtn" class="btn btn-ghost">Cancel</button>
+        <button id="editSave" class="btn btn-primary">Save Changes</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script src="admin-panel.js"></script>
+  <!-- DELETE MODAL -->
+  <div id="deleteModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Delete Company?</h3>
+        <button id="deleteCancel" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this company? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="deleteCancelBtn" class="btn btn-ghost">Cancel</button>
+        <button id="deleteConfirm" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
 
-<script>
-// THEME HANDLER
-const btn = document.getElementById("themeToggle");
-if (localStorage.getItem("theme") === "light") {
-  document.body.classList.add("light");
-  btn.textContent = "🌙";
-} else {
-  btn.textContent = "☀️";
-}
+  <!-- PREMIUM MODAL -->
+  <div id="premiumModal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Set Premium</h3>
+        <button id="premiumCancel" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Start Date</label>
+            <input id="premiumStart" type="date">
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input id="premiumEnd" type="date">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="premiumCancelBtn" class="btn btn-ghost">Cancel</button>
+        <button id="premiumSave" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
 
-btn.onclick = () => {
-  document.body.classList.toggle("light");
-  const mode = document.body.classList.contains("light") ? "light" : "dark";
-  localStorage.setItem("theme", mode);
-  btn.textContent = mode === "light" ? "🌙" : "☀️";
-};
+  <script>
+    // THEME HANDLER
+    // THEME HANDLER
+    const btn = document.getElementById("themeToggle");
+    // Default is light. If local storage says 'dark', apply .dark
+    if (localStorage.getItem("theme") === "dark") {
+      document.body.classList.add("dark");
+      btn.textContent = "☀️";
+    } else {
+      btn.textContent = "🌙";
+    }
 
-// If no token → redirect to login
-if (!localStorage.getItem("admin_token")) {
-  window.location.href = "/admin.html";
-}
-</script>
+    btn.onclick = () => {
+      document.body.classList.toggle("dark");
+      const mode = document.body.classList.contains("dark") ? "dark" : "light";
+      localStorage.setItem("theme", mode);
+      btn.textContent = mode === "dark" ? "☀️" : "🌙";
+    };
 
-<script src="config.js"></script>
-<script src="admin-panel.js"></script>
+    // If no token → redirect to login
+    if (!localStorage.getItem("admin_token")) {
+      window.location.href = "/admin.html";
+    }
+  </script>
+
+  <script src="config.js"></script>
+  <script src="admin-panel.js"></script>
 </body>
+
 </html>

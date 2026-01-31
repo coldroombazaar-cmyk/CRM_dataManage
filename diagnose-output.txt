@@ -1,0 +1,70 @@
+﻿
+======================================================================
+FILE: uploads/1763031941141_Owner_List_1_.xlsx
+======================================================================
+
+Sheet Name: Worksheet
+Total Rows: 254
+Total Columns: 13
+
+--- ROW 1 (HEADERS) ---
+Col 1: "Name"
+Col 2: "Email"
+Col 3: "Contact Number"
+Col 4: "Whatsapp Number"
+Col 5: "Company Name"
+Col 6: "Company URL"
+Col 7: "Company Address"
+Col 8: "GST No"
+Col 9: "GST Reg. Date"
+Col 10: "Business Age"
+Col 11: "Member Since"
+Col 12: "Status"
+Col 13: "Created At"
+
+--- ROW 2 (FIRST DATA) ---
+Col 1: "Wonder Ladders"
+Col 2: "info@wonderladders.com"
+Col 3: "9320544455"
+Col 4: "9320544455"
+Col 5: "WONDER LADDERS"
+Col 6: "https://wonderladders.in/"
+Col 7: "Ground Floor, 52/A, Dr Mascarnhas Road, Opp Bori K..."
+Col 8: "27AIVPD5659D1ZX"
+Col 9: "2017-07-01"
+Col 12: "Active"
+Col 13: "12-11-2025"
+
+======================================================================
+FILE: uploads/Owner_List (1).xlsx
+======================================================================
+
+Sheet Name: Worksheet
+Total Rows: 1046
+Total Columns: 13
+
+--- ROW 1 (HEADERS) ---
+Col 1: "Name"
+Col 2: "Email"
+Col 3: "Contact Number"
+Col 4: "Whatsapp Number"
+Col 5: "Company Name"
+Col 6: "Company URL"
+Col 7: "Company Address"
+Col 8: "GST No"
+Col 9: "GST Reg. Date"
+Col 10: "Business Age"
+Col 11: "Member Since"
+Col 12: "Status"
+Col 13: "Created At"
+
+--- ROW 2 (FIRST DATA) ---
+Col 1: "Karan Kumar"
+Col 2: "salesbhoomika@hotmail.com"
+Col 3: "8700306244"
+Col 4: "9958471842"
+Col 5: "BHOOMIKA AIRCONDITIONING  REFRIGERATION"
+Col 7: "537/A, Rajiv Nagar Extn, Rohini Sector 22, New Del..."
+Col 8: "07AWHPK7492H2Z2"
+Col 12: "Active"
+Col 13: "31-01-2026"

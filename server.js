@@ -562,14 +562,57 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
 
       const headerRow = sheet.getRow(1);
       const headers = [];
+      const headerMap = {};
+
       headerRow.eachCell((cell, n) => {
-        headers[n] = (cell.text || "").trim();
+        let headerText = '';
+
+        // Handle rich text
+        if (cell.value && typeof cell.value === 'object' && cell.value.richText) {
+          headerText = cell.value.richText.map(t => t.text).join('');
+        } else {
+          headerText = String(cell.value || '');
+        }
+
+        headers[n] = headerText.trim();
+        const lower = headerText.trim().toLowerCase();
+
+        // Map common variations to standard field names
+        if (lower.includes('business') || lower.includes('company') || lower === 'name') {
+          headerMap[n] = 'businessName';
+        } else if (lower.includes('owner')) {
+          headerMap[n] = 'ownerName';
+        } else if (lower.includes('state') || lower.includes('location')) {
+          headerMap[n] = 'state';
+        } else if (lower.includes('category') || lower.includes('type')) {
+          headerMap[n] = 'category';
+        } else if (lower.includes('contact') || lower.includes('phone') || lower.includes('mobile')) {
+          headerMap[n] = 'contactNumber';
+        } else if (lower.includes('whatsapp')) {
+          headerMap[n] = 'whatsappNumber';
+        } else if (lower.includes('email')) {
+          headerMap[n] = 'email';
+        } else if (lower.includes('website') || lower.includes('web')) {
+          headerMap[n] = 'website';
+        } else if (lower.includes('gst')) {
+          headerMap[n] = 'gstNo';
+        } else if (lower.includes('capacity')) {
+          headerMap[n] = 'capacity';
+        } else if (lower.includes('description') || lower.includes('details')) {
+          headerMap[n] = 'description';
+        }
       });
 
-      const lowerHeaders = headers.map(h => (h || "").toLowerCase());
-      if (!lowerHeaders.includes("businessname") || !lowerHeaders.includes("state")) {
+      // Check if we have required fields
+      const hasBusinessName = Object.values(headerMap).includes('businessName');
+      const hasState = Object.values(headerMap).includes('state');
+
+      if (!hasBusinessName || !hasState) {
         fs.unlinkSync(filePath);
-        return res.status(400).json({ error: "Missing required headers: businessName and/or state" });
+        return res.status(400).json({
+          error: "Missing required columns. Need: Business/Company Name and State/Location",
+          foundHeaders: headers.filter(h => h)
+        });
       }
 
       sheet.eachRow((row, rowNum) => {
@@ -577,14 +620,22 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
 
         const obj = {};
         row.eachCell((cell, col) => {
-          const h = (headers[col] || "").trim();
-          const v = (cell.text || "").toString().trim();
-          if (h) obj[h] = v;
-        });
+          const fieldName = headerMap[col];
+          if (!fieldName) return;
 
-        if (!obj.businessName && obj.businessname) obj.businessName = obj.businessname;
-        if (!obj.state && obj.State) obj.state = obj.State;
-        if (!obj.state && obj.state === undefined && obj.STATE) obj.state = obj.STATE;
+          let cellValue = '';
+
+          // Handle rich text
+          if (cell.value && typeof cell.value === 'object' && cell.value.richText) {
+            cellValue = cell.value.richText.map(t => t.text).join('');
+          } else if (cell.value && typeof cell.value === 'object' && cell.value.result !== undefined) {
+            cellValue = String(cell.value.result);
+          } else {
+            cellValue = String(cell.value || '');
+          }
+
+          obj[fieldName] = cellValue.trim();
+        });
 
         if (!obj.businessName || !obj.state) return;
 
@@ -638,9 +689,20 @@ app.post("/admin/import", requireAdmin, upload.single("file"), async (req, res) 
     insertMany();
     fs.unlinkSync(filePath);
 
+    // Return only 2-3 sample rows for frontend display
+    const sampleRows = rowsToInsert.slice(0, 3).map(r => ({
+      businessName: r.businessName,
+      ownerName: r.ownerName,
+      category: r.category || "Unknown",
+      state: r.state,
+      contactNumber: r.contactNumber
+    }));
+
     res.json({
       success: true,
-      imported: rowsToInsert.length
+      imported: rowsToInsert.length,
+      sampleData: sampleRows,
+      message: `Successfully imported ${rowsToInsert.length} companies. Showing ${sampleRows.length} sample records.`
     });
   } catch (err) {
     console.error("Import error:", err && err.stack ? err.stack : err);

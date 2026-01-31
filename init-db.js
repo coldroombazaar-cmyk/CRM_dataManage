@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   // Admin
   const row = db.prepare('SELECT id FROM admins WHERE username = ?').get('admin');
   if (!row) {
-    const pass = 'change_me_123';
+    const pass = 'nopass';
     const hash = await bcrypt.hash(pass, 10);
     db.prepare('INSERT INTO admins (username, password_hash) VALUES (?, ?)').run('admin', hash);
     console.log('Admin created: admin / ' + pass);
