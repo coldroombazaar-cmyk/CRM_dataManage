@@ -14,7 +14,7 @@ const setToken = v =>
 async function api(path, opts = {}) {
   // Prepend API_URL if path doesn't start with http
   const fullPath = path.startsWith('http') ? path : (API_URL + path);
-  
+
   opts.headers = opts.headers || {};
   const token = getToken();
   if (!token) {
@@ -60,6 +60,11 @@ const btnLogout = $("btnLogout");
 const btnExport = $("btnExport");
 const btnListAdmins = $("btnListAdmins");
 const btnDeleteSelected = $("btnDeleteSelected");
+
+/* SIDEBAR BUTTONS */
+const btnExportSidebar = $("btnExportSidebar");
+const btnListAdminsSidebar = $("btnListAdminsSidebar");
+const btnDeleteSelectedSidebar = $("btnDeleteSelectedSidebar");
 
 const btnPrevPage = $("btnPrevPage");
 const btnNextPage = $("btnNextPage");
@@ -145,8 +150,8 @@ async function loadCategories() {
     catsDiv.innerHTML = "";
     categories.forEach(c => {
       const div = document.createElement("div");
-      div.className = "cat";
-      div.textContent = c.name;
+      div.className = "menu-item";
+      div.innerHTML = `<span>📁</span><span>${c.name}</span>`;
 
       div.onclick = () => {
         currentCategory = currentCategory === c.id ? null : c.id;
@@ -345,21 +350,25 @@ async function refresh() {
     : lastRows;
 
   if (!rows.length) {
-    listEl.innerHTML = "<div class='small'>No companies found.</div>";
+    listEl.innerHTML = "<tr><td colspan='9' style='text-align: center; padding: 40px;'>No companies found.</td></tr>";
     return;
   }
 
-  listEl.innerHTML = rows.map(renderItem).join("");
+  listEl.innerHTML = rows.map((row, index) => renderItem(row, index)).join("");
 
   // Attach row events
-  listEl.querySelectorAll(".item").forEach(el => {
+  listEl.querySelectorAll("tr").forEach(el => {
     const id = el.dataset.id;
-    const editBtn = el.querySelector("[data-edit]");
+    const editBtns = el.querySelectorAll("[data-edit]");
     const delBtn = el.querySelector("[data-del]");
     const premBtn = el.querySelector("[data-premium]");
     const check = el.querySelector(".row-check");
 
-    if (editBtn) editBtn.onclick = () => openEdit(id);
+    if (editBtns.length > 0) {
+      editBtns.forEach(btn => {
+        btn.onclick = () => openEdit(id);
+      });
+    }
     if (delBtn) delBtn.onclick = () => openDelete(id);
     if (premBtn) premBtn.onclick = () => openPremium(id);
     if (check) {
@@ -372,51 +381,60 @@ async function refresh() {
 }
 
 /* ============================================================
-   RENDER ITEM
+   RENDER ITEM (TABLE ROW)
 ============================================================ */
-function renderItem(it) {
+function renderItem(it, index) {
   const catName =
     categories.find(c => c.id === it.category_id)?.name || "Unknown";
 
+  const statusBadge = it.is_premium
+    ? '<span class="badge badge-premium">★ Premium</span>'
+    : '<span class="badge badge-active">Active</span>';
+
+  const createdDate = it.created_at
+    ? new Date(it.created_at).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    : 'N/A';
+
   return `
-    <div class="item ${it.is_premium ? "premium" : ""}" data-id="${it.id}">
-      <div>
-        <div class="title">${escapeHtml(it.businessName)}</div>
-        <div class="meta">${escapeHtml(it.ownerName || "")} • ${escapeHtml(catName)}</div>
-        <div class="meta">${escapeHtml(it.description || "")}</div>
-      </div>
-
-      <div class="right">
-        <input type="checkbox" class="row-check" />
-
-        ${it.is_premium ? `<div class="badge-premium">★ Premium</div>` : ""}
-
-        <div class="meta contact">
-            ${escapeHtml(it.contactNumber || "")}
-            ${
-              it.contactNumber
-                ? `<a href="https://wa.me/${encodeURIComponent(it.contactNumber)}"
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      class="wa-icon">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                          viewBox="0 0 24 24" fill="#25D366">
-                          <path d="M20.52 3.48A11.76 11.76 0 0 0 12 0C5.37 0 .27 5.1.27 11.73a11.66 11.66 0 0 0 1.59 5.88L0 24l6.62-1.73a11.73 11.73 0 0 0 5.38 1.33h.01c6.63 0 11.73-5.1 11.73-11.73a11.67 11.67 0 0 0-3.22-8.39zM12 21.5c-1.71 0-3.38-.45-4.84-1.31l-.35-.2-3.93 1.03 1.05-3.83-.23-.39A9.83 9.83 0 0 1 2.17 11.7C2.17 6.38 6.68 1.88 12 1.88c2.61 0 5.07 1.02 6.92 2.87A9.74 9.74 0 0 1 21.83 11.7c0 5.32-4.51 9.8-9.83 9.8zm5.12-7.39c-.28-.14-1.65-.82-1.9-.91-.25-.09-.43-.14-.61.14-.18.27-.7.91-.86 1.1-.16.18-.32.2-.6.07a8.43 8.43 0 0 1-2.47-1.53 9.38 9.38 0 0 1-1.76-2.19c-.18-.32-.02-.49.13-.64.14-.14.32-.37.48-.55.16-.18.21-.32.32-.54.11-.23.07-.41-.04-.55-.11-.14-.61-1.47-.83-2.01-.22-.54-.46-.47-.61-.48-.16-.01-.34-.01-.52-.01-.18 0-.48.07-.73.34-.25.27-.97.95-.97 2.32 0 1.37.99 2.69 1.13 2.88.14.18 1.94 3.06 4.77 4.29.66.28 1.18.45 1.58.58.66.21 1.25.18 1.72.11.53-.08 1.65-.67 1.88-1.32.23-.64.23-1.19.16-1.32-.07-.13-.25-.2-.53-.34z"/>
-                      </svg>
-                  </a>`
-                : ""
-            }
-          </div>
-
-        <div class="controls">
-          <button data-edit class="ghost">Edit</button>
-          <button data-del class="ghost">Delete</button>
-          <button data-premium class="ghost">
-            ${it.is_premium ? "Change Premium" : "Set Premium"}
-          </button>
+    <tr data-id="${it.id}">
+      <td>${index + 1}</td>
+      <td>${escapeHtml(it.id || 'N/A')}</td>
+      <td>${escapeHtml(it.ownerName || 'N/A')}</td>
+      <td>${escapeHtml(it.email || 'N/A')}</td>
+      <td>${escapeHtml(it.businessName)}</td>
+      <td>
+        ${escapeHtml(it.contactNumber || 'N/A')}
+        ${it.contactNumber
+      ? `<a href="https://wa.me/${encodeURIComponent(it.contactNumber)}" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="wa-icon"
+               title="WhatsApp">
+               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="#25D366">
+                   <path d="M20.52 3.48A11.76 11.76 0 0 0 12 0C5.37 0 .27 5.1.27 11.73a11.66 11.66 0 0 0 1.59 5.88L0 24l6.62-1.73a11.73 11.73 0 0 0 5.38 1.33h.01c6.63 0 11.73-5.1 11.73-11.73a11.67 11.67 0 0 0-3.22-8.39zM12 21.5c-1.71 0-3.38-.45-4.84-1.31l-.35-.2-3.93 1.03 1.05-3.83-.23-.39A9.83 9.83 0 0 1 2.17 11.7C2.17 6.38 6.68 1.88 12 1.88c2.61 0 5.07 1.02 6.92 2.87A9.74 9.74 0 0 1 21.83 11.7c0 5.32-4.51 9.8-9.83 9.8zm5.12-7.39c-.28-.14-1.65-.82-1.9-.91-.25-.09-.43-.14-.61.14-.18.27-.7.91-.86 1.1-.16.18-.32.2-.6.07a8.43 8.43 0 0 1-2.47-1.53 9.38 9.38 0 0 1-1.76-2.19c-.18-.32-.02-.49.13-.64.14-.14.32-.37.48-.55.16-.18.21-.32.32-.54.11-.23.07-.41-.04-.55-.11-.14-.61-1.47-.83-2.01-.22-.54-.46-.47-.61-.48-.16-.01-.34-.01-.52-.01-.18 0-.48.07-.73.34-.25.27-.97.95-.97 2.32 0 1.37.99 2.69 1.13 2.88.14.18 1.94 3.06 4.77 4.29.66.28 1.18.45 1.58.58.66.21 1.25.18 1.72.11.53-.08 1.65-.67 1.88-1.32.23-.64.23-1.19.16-1.32-.07-.13-.25-.2-.53-.34z"/>
+               </svg>
+             </a>`
+      : ''
+    }
+      </td>
+      <td>${statusBadge}</td>
+      <td>${createdDate}</td>
+      <td>
+        <div class="action-buttons">
+          <input type="checkbox" class="row-check" title="Select" />
+          <button data-edit class="action-btn action-btn-view" title="View">👁️</button>
+          <button data-edit class="action-btn action-btn-edit" title="Edit">✏️</button>
+          <button data-del class="action-btn action-btn-delete" title="Delete">🗑️</button>
         </div>
-      </div>
-    </div>
+      </td>
+    </tr>
   `;
 }
 
@@ -575,12 +593,37 @@ if (btnImport) {
       data = text;
     }
 
-    if (importStatus)
-      importStatus.textContent = res.ok ? "Import successful!" : "Import failed!";
-    if (importLog)
-      importLog.textContent = typeof data === "string"
-        ? data
-        : JSON.stringify(data, null, 2);
+    if (importStatus) {
+      if (res.ok && data.success) {
+        importStatus.innerHTML = `<strong style="color: #4ade80;">✓ ${data.message || 'Import successful!'}</strong>`;
+      } else {
+        importStatus.innerHTML = `<strong style="color: #f87171;">✗ Import failed!</strong>`;
+      }
+    }
+
+    if (importLog) {
+      if (res.ok && data.sampleData && Array.isArray(data.sampleData)) {
+        // Display sample data in a nice format
+        let logHtml = `<div style="margin-top: 10px; font-size: 13px;">`;
+        logHtml += `<strong>Sample Records (${data.sampleData.length} of ${data.imported}):</strong>\n\n`;
+
+        data.sampleData.forEach((row, idx) => {
+          logHtml += `${idx + 1}. ${row.businessName || 'N/A'}\n`;
+          logHtml += `   Owner: ${row.ownerName || 'N/A'}\n`;
+          logHtml += `   Category: ${row.category || 'Unknown'}\n`;
+          logHtml += `   State: ${row.state || 'N/A'}\n`;
+          logHtml += `   Contact: ${row.contactNumber || 'N/A'}\n\n`;
+        });
+
+        logHtml += `</div>`;
+        importLog.innerHTML = logHtml;
+      } else {
+        // Fallback to JSON display for errors
+        importLog.textContent = typeof data === "string"
+          ? data
+          : JSON.stringify(data, null, 2);
+      }
+    }
 
     if (res.ok) {
       await loadCategories();
@@ -613,6 +656,11 @@ if (btnExport) {
   };
 }
 
+/* Wire up sidebar buttons to same handlers */
+if (btnExportSidebar) {
+  btnExportSidebar.onclick = btnExport?.onclick;
+}
+
 /* ============================================================
    NOTIFICATIONS
 ============================================================ */
@@ -631,6 +679,11 @@ if (btnListAdmins) {
         .join("\n\n")
     );
   };
+}
+
+/* Wire up sidebar notifications button */
+if (btnListAdminsSidebar) {
+  btnListAdminsSidebar.onclick = btnListAdmins?.onclick;
 }
 
 /* ============================================================
@@ -653,6 +706,57 @@ if (btnDeleteSelected) {
 
     selectedIds.clear();
     refresh();
+  };
+}
+
+/* Wire up sidebar delete selected button */
+if (btnDeleteSelectedSidebar) {
+  btnDeleteSelectedSidebar.onclick = btnDeleteSelected?.onclick;
+}
+
+/* ============================================================
+   SIDEBAR MENU ITEMS
+============================================================ */
+const menuDashboard = $("menuDashboard");
+const menuBusinessOwner = $("menuBusinessOwner");
+const menuCategory = $("menuCategory");
+const menuBrands = $("menuBrands");
+
+// Helper to set active menu item
+function setActiveMenuItem(activeItem) {
+  [menuDashboard, menuBusinessOwner, menuCategory, menuBrands].forEach(item => {
+    if (item) item.classList.remove('active');
+  });
+  if (activeItem) activeItem.classList.add('active');
+}
+
+// Dashboard - refresh the current view
+if (menuDashboard) {
+  menuDashboard.onclick = () => {
+    setActiveMenuItem(menuDashboard);
+    refresh();
+  };
+}
+
+// Manage Business Owner - this is the current page, just refresh
+if (menuBusinessOwner) {
+  menuBusinessOwner.onclick = () => {
+    setActiveMenuItem(menuBusinessOwner);
+    refresh();
+  };
+}
+
+// Manage Category - show alert (feature not yet implemented)
+if (menuCategory) {
+  menuCategory.onclick = () => {
+    alert('Category Management\n\nThis feature is coming soon!\n\nFor now, you can:\n• View categories in the sidebar\n• Filter companies by category\n• Assign categories when editing companies');
+  };
+}
+
+// Manage Brands - show alert (feature not yet implemented)
+if (menuBrands) {
+  menuBrands.onclick = () => {
+    alert('Brand Management\n\nThis feature is coming soon!\n\nYou can add brand information in the company description field for now.');
   };
 }
 
